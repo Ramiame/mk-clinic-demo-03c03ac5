@@ -1,0 +1,774 @@
+<title>إدارة عيادة د. مصطفى كمال</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: fixed side rail of sections + wide work area; tables and lists over cards, colour only for clinical state */
+:root{
+  --bg:#EDF2F2; --surface:#FFFFFF; --sunk:#F4F7F7; --ink:#12262D; --muted:#586C73; --line:#D6E1E2;
+  --accent:#0C6F7B; --accent-ink:#FFFFFF; --accent-soft:#D9EDEF; --rail:#0F2A31; --rail-ink:#CFE1E3; --rail-hi:#1B3E46;
+  --ok:#2B7A4B; --ok-soft:#DFF1E5; --warn:#9A5F0C; --warn-soft:#FAEDD6; --danger:#B0341A; --danger-soft:#FAE2DB; --violet:#5B4BB0; --violet-soft:#E7E3F8;
+  --display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0B1518; --surface:#122126; --sunk:#0E1B1F; --ink:#E3EEF0; --muted:#93A8AE; --line:#24373D;
+  --accent:#4FB7C3; --accent-ink:#06282D; --accent-soft:#16363C; --rail:#081114; --rail-ink:#A9C2C6; --rail-hi:#163238;
+  --ok:#6CC892; --ok-soft:#163327; --warn:#E3AA55; --warn-soft:#3A2B12; --danger:#F08A70; --danger-soft:#3C1C14; --violet:#A99BF0; --violet-soft:#2A2547; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0B1518; --surface:#122126; --sunk:#0E1B1F; --ink:#E3EEF0; --muted:#93A8AE; --line:#24373D;
+  --accent:#4FB7C3; --accent-ink:#06282D; --accent-soft:#16363C; --rail:#081114; --rail-ink:#A9C2C6; --rail-hi:#163238;
+  --ok:#6CC892; --ok-soft:#163327; --warn:#E3AA55; --warn-soft:#3A2B12; --danger:#F08A70; --danger-soft:#3C1C14; --violet:#A99BF0; --violet-soft:#2A2547; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.6}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);line-height:1.3;margin:0;text-wrap:balance}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85em}
+
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+.rail{background:var(--rail);color:var(--rail-ink);padding:18px 12px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow:auto;padding-left:max(12px,env(safe-area-inset-left,0px))}
+[dir="rtl"] .rail{padding-left:12px;padding-right:max(12px,env(safe-area-inset-right,0px))}
+.brand{display:flex;gap:10px;align-items:center;padding:0 6px}
+.mark{width:38px;height:38px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.brand b{font-family:var(--display);color:#fff;font-size:.95em;display:block;line-height:1.35}
+.brand small{font-size:.75em;opacity:.75}
+.rail nav{display:flex;flex-direction:column;gap:2px}
+.rail nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:inherit;text-decoration:none;font-weight:500}
+.rail nav a:hover{background:var(--rail-hi)}
+.rail nav a[aria-current="page"]{background:var(--rail-hi);color:#fff}
+.rail nav a svg{width:18px;height:18px;flex:none}
+.rail nav .cnt{margin-inline-start:auto;background:var(--danger);color:#fff;border-radius:99px;font-size:.72em;padding:0 7px;font-weight:700}
+.rail .foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;font-size:.82em}
+.rail .me{display:flex;gap:10px;align-items:center;padding:8px;border-radius:10px;background:var(--rail-hi)}
+.av{width:32px;height:32px;border-radius:99px;display:grid;place-items:center;font-weight:700;font-size:.8em;flex:none;background:var(--accent-soft);color:var(--accent)}
+.rail .av{background:var(--accent);color:var(--accent-ink)}
+.rail button{background:transparent;border:1px solid var(--rail-hi);color:inherit;border-radius:10px;padding:6px 10px}
+
+.work{min-width:0;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:12px;padding-block:14px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:4}
+.bar h1{font-size:1.2em;flex:1;min-width:0}
+.demo{font-size:.75em;color:var(--warn);background:var(--warn-soft);border-radius:99px;padding:2px 10px;white-space:nowrap}
+.content{padding-block:22px 60px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px;max-width:1240px;width:100%}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.panel-h h2{font-size:1.02em}
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start}
+.grid2 > *{min-width:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{font-family:var(--display);font-size:1.6em;display:block;line-height:1.2}
+.stat span{color:var(--muted);font-size:.85em}
+
+.btn{border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:var(--accent-ink);font-weight:600;white-space:nowrap}
+.btn.ghost{background:var(--sunk);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.sm{padding:5px 10px;font-size:.85em}
+.icon-btn{border:1px solid var(--line);background:var(--sunk);border-radius:10px;height:36px;min-width:36px;padding:0 10px;font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:1px 9px;font-size:.78em;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.danger{background:var(--danger-soft);color:var(--danger)}
+.pill.info{background:var(--accent-soft);color:var(--accent)}
+.pill.violet{background:var(--violet-soft);color:var(--violet)}
+.pill.plain{background:var(--sunk);color:var(--muted);border:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.between{justify-content:space-between}
+
+.alert{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border-radius:12px;padding:12px 14px}
+.alert.danger{background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent)}
+.alert.warn{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent)}
+.alert .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff}
+.alert.danger .ic{background:var(--danger)}
+.alert.warn .ic{background:var(--warn)}
+
+.tbl-wrap{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th{font-size:.78em;color:var(--muted);font-weight:600;text-align:start;padding:8px 10px;border-bottom:1px solid var(--line);letter-spacing:.02em;white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--sunk)}
+.who{display:flex;gap:10px;align-items:center;min-width:0}
+.who b{display:block}
+.ltr{direction:ltr;unicode-bidi:isolate}
+
+.sched{display:flex;flex-direction:column}
+.slot{display:grid;grid-template-columns:72px 4px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.slot:first-child{border-top:0}
+.slot .tm{font-family:var(--display);font-weight:600}
+.slot .stripe{align-self:stretch;border-radius:4px;background:var(--line)}
+.slot.s-done .stripe{background:var(--ok)}
+.slot.s-chair .stripe{background:var(--accent)}
+.slot.s-wait .stripe{background:var(--warn)}
+.slot.s-alert .stripe{background:var(--danger)}
+
+.search{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search input{flex:1;min-width:200px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 12px;font-size:.85em}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* patient file */
+.phead{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.phead .av{width:56px;height:56px;font-size:1.1em}
+.phead h2{font-size:1.3em}
+.flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;border-bottom:2px solid transparent;color:var(--muted);font-weight:600;white-space:nowrap}
+.tabs button[aria-current="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px 24px;margin:0}
+.kv dt{font-size:.78em;color:var(--muted);font-weight:600}
+.kv dd{margin:2px 0 0}
+textarea,.inp,select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 12px}
+textarea{min-height:90px;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:.88em}
+label.f > span.h{font-weight:400;color:var(--muted);font-size:.92em}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form .full{grid-column:1/-1}
+.check{display:flex;gap:8px;align-items:center;font-weight:500}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+
+/* tooth chart (FDI) */
+.chart-wrap{overflow-x:auto}
+.chart{display:grid;grid-template-columns:repeat(16,minmax(38px,1fr));gap:4px;min-width:680px;direction:ltr}
+.chart .mid{grid-column:1/-1;height:1px;background:var(--line);margin:6px 0;position:relative}
+.chart .lab{grid-column:span 8;font-size:.72em;color:var(--muted);text-align:center}
+.tooth{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 0 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.78em;font-weight:600}
+.tooth svg{width:22px;height:26px}
+.tooth.st-caries{background:var(--danger-soft);border-color:var(--danger);color:var(--danger)}
+.tooth.st-filling{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.tooth.st-rct{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+.tooth.st-crown{background:var(--violet-soft);border-color:var(--violet);color:var(--violet)}
+.tooth.st-implant{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.tooth.st-extracted{background:var(--sunk);border-style:dashed;color:var(--muted)}
+.tooth.st-extracted svg{opacity:.25}
+.tooth.st-planned{border:2px dashed var(--warn);color:var(--warn)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.82em}
+.legend span{display:flex;gap:6px;align-items:center}
+.legend i{width:14px;height:14px;border-radius:4px;border:1px solid var(--line);display:inline-block}
+
+.xgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.xray{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#050607;margin:0}
+.xray canvas,.xray img{display:block;width:100%;height:auto;max-width:100%;aspect-ratio:16/9;object-fit:cover}
+.xray figcaption{background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:2px;font-size:.88em}
+.drop{border:2px dashed var(--line);border-radius:12px;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);min-height:160px;cursor:pointer}
+.drop input{display:none}
+
+.list{display:flex;flex-direction:column}
+.li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.li:first-child{border-top:0}
+.dotc{width:10px;height:10px;border-radius:99px;background:var(--line)}
+.dotc.ok{background:var(--ok)}.dotc.next{background:var(--accent)}.dotc.plan{background:var(--warn)}
+
+/* inbox */
+.q{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.q.emergency{border-color:color-mix(in srgb,var(--danger) 45%,transparent);background:var(--danger-soft)}
+.q .bubble{background:var(--sunk);border-radius:12px;padding:10px 12px}
+.q.emergency .bubble{background:var(--surface)}
+.q .why{font-size:.82em;color:var(--warn);font-weight:600}
+.q.emergency .why{color:var(--danger)}
+.convo{display:flex;flex-direction:column;gap:8px}
+.convo .m{max-width:78%;padding:8px 12px;border-radius:12px}
+.convo .m.p{align-self:flex-start;background:var(--sunk)}
+.convo .m.a{align-self:flex-end;background:var(--accent-soft)}
+.convo .meta{font-size:.75em;color:var(--muted)}
+
+/* team matrix */
+.matrix td,.matrix th{text-align:center}
+.matrix td:first-child,.matrix th:first-child{text-align:start}
+.matrix input{width:18px;height:18px;accent-color:var(--accent)}
+
+/* templates */
+.tpl{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+.tpl-list button{display:block;width:100%;text-align:start;border:0;background:none;padding:10px 12px;border-radius:10px}
+.tpl-list button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(5,15,18,.5);z-index:50;display:grid;place-items:center;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal{background:var(--surface);border-radius:16px;border:1px solid var(--line);width:100%;max-width:620px;max-height:90vh;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.modal h2{font-size:1.1em}
+.warnbox{background:var(--danger-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--danger) 40%,transparent);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.warnbox b{color:var(--danger)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:60;font-size:.92em;max-width:90vw}
+.linkbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.linkbox code{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:6px 10px;direction:ltr;user-select:all;overflow-wrap:anywhere;min-width:0;flex:1}
+
+@media (max-width:980px){
+  .grid2,.tpl{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:column;gap:10px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+  [dir="rtl"] .rail{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .rail nav{flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:2px}
+  .rail nav a{white-space:nowrap;padding:7px 10px}
+  .rail .foot{display:none}
+  .bar,.content{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .form{grid-template-columns:1fr}
+  .phead{grid-template-columns:auto 1fr}
+  .phead .acts{grid-column:1/-1}
+  .slot{grid-template-columns:60px 4px 1fr}
+  .slot > :last-child{grid-column:3}
+}
+</style>
+
+<div id="root"></div>
+
+<script>
+(function(){
+const PATIENT_APP_URL='https://claude.ai/artifact/UtofQz46fAHgVSWm89MPn3';
+/* ---------- dates & helpers ---------- */
+const now=new Date();const today=new Date(now);today.setHours(0,0,0,0);
+const day=n=>{const d=new Date(today);d.setDate(d.getDate()+n);return d};
+const A={lang:'ar',ptab:'file',filter:'all',q:'',inboxTab:'pending',tpl:'extraction',modal:null};
+try{const s=JSON.parse(localStorage.getItem('mk-admin')||'{}');if(s.lang)A.lang=s.lang}catch(e){}
+const save=()=>{try{localStorage.setItem('mk-admin',JSON.stringify({lang:A.lang}))}catch(e){}};
+const L=o=>o==null?'':typeof o==='string'?o:(o[A.lang]??o.ar);
+const loc=()=>A.lang==='ar'?'ar-IQ-u-nu-latn':'en-GB';
+const fd=(d,o)=>d?d.toLocaleDateString(loc(),o||{day:'numeric',month:'short',year:'numeric'}):'—';
+function ft(t){let [h,m]=t.split(':').map(Number);const pm=h>=12;return `${h%12||12}:${String(m).padStart(2,'0')} ${A.lang==='ar'?(pm?'م':'ص'):(pm?'PM':'AM')}`}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const initials=n=>{const p=L(n).split(' ');return (p[0]?.[0]||'')+(p[1]?.[0]||'')};
+const ago=min=>A.lang==='ar'?(min<60?`قبل ${min} دقيقة`:`قبل ${Math.round(min/60)} ساعة`):(min<60?`${min} min ago`:`${Math.round(min/60)} h ago`);
+let uid=100;
+
+/* ---------- demo data ---------- */
+const CLINIC={name:{ar:'عيادة الدكتور مصطفى كمال',en:'Dr. Mustafa Kamal Dental Clinic'},sub:{ar:'طب وتجميل الأسنان',en:'Dentistry'},
+  address:{ar:'بغداد، الأعظمية، شارع عمر بن عبد العزيز، قرب جامع أبي حنيفة، الطابق الأول',en:'1st floor, Omar bin Abdulaziz St., near Abu Hanifa Mosque, Al-Adhamiya, Baghdad'},
+  phone:'0770 980 4412',wa:'0770 980 4412',hours:{ar:'السبت إلى الخميس، 4:00 م إلى 10:00 م',en:'Saturday to Thursday, 4:00 PM to 10:00 PM'}};
+const DOCS={mk:{ar:'د. مصطفى كمال',en:'Dr. Mustafa Kamal'},sn:{ar:'د. سارة ناظم',en:'Dr. Sara Nadhim'}};
+
+const PATIENTS=[
+ {id:1,name:{ar:'أحمد علي حسن',en:'Ahmed Ali Hassan'},sex:'m',age:34,phone:'0770 123 4567',ch:'app',blood:'O+',file:'MK-0142',status:'followup',last:-1,
+  conditions:[],allergies:[],pregnant:false,current:[],ec:{ar:'علي حسن (الأب) · 0771 555 2310',en:'Ali Hassan (father) · 0771 555 2310'},
+  notes:{ar:'قلع جراحي لضرس العقل 38 (مطمور جزئياً). العملية بدون مضاعفات، 3 غرز. المريض متعاون. تسوس عميق في 16 يحتاج عصب.',en:'Surgical extraction of 38 (partially impacted). Uneventful, 3 sutures. Cooperative patient. Deep caries on 16 needs root canal.'},
+  teeth:{38:'extracted',16:'planned',26:'filling',47:'filling',37:'caries'},
+  xrays:[{type:'pano',d:-8,seed:11,note:{ar:'بانوراما أولية: 38 مطمور جزئياً، تسوس عميق في 16',en:'Initial pano: 38 partially impacted, deep caries on 16'}},{type:'pa',d:-1,seed:4,missing:[1],note:{ar:'أشعة صغيرة بعد قلع 38',en:'Periapical after extracting 38'}}],
+  sessions:[{d:-8,s:'done',t:{ar:'فحص شامل وأشعة بانوراما',en:'Full exam and panoramic X-ray'},dr:'mk'},{d:-1,s:'done',t:{ar:'قلع جراحي 38 + 3 غرز',en:'Surgical extraction of 38, 3 sutures'},dr:'mk'},{d:6,s:'next',t:{ar:'فك الغرز والمراجعة',en:'Suture removal and check-up'},dr:'mk'},{s:'plan',t:{ar:'علاج عصب 16 (جلستين)',en:'Root canal on 16 (two visits)'}},{s:'plan',t:{ar:'تاج زركون 16',en:'Zirconia crown on 16'}},{s:'plan',t:{ar:'حشوة 37',en:'Filling on 37'}}],
+  meds:[{name:'Amoxicillin 500 mg',how:{ar:'كبسولة كل 8 ساعات بعد الأكل',en:'1 capsule every 8 h after food'},times:['07:00','15:00','23:00'],days:5,start:-1},{name:'Chlorhexidine 0.12%',how:{ar:'مضمضة صبح ومساء من اليوم الثاني',en:'Rinse morning and evening from day 2'},times:['09:00','21:00'],days:7,start:0},{name:'Ibuprofen 400 mg',how:{ar:'عند الألم، حد أعلى 3 باليوم',en:'When needed, max 3 a day'},times:[],prn:true,days:3,start:-1}],
+  sent:['extraction']},
+ {id:2,name:{ar:'فاطمة كريم عبد الله',en:'Fatima Karim Abdullah'},sex:'f',age:67,phone:'0780 456 1290',ch:'wa',blood:'A+',file:'MK-0127',status:'active',last:-6,
+  conditions:[{ar:'سكري نوع 2',en:'Type 2 diabetes'},{ar:'ضغط',en:'Hypertension'}],allergies:[],pregnant:false,current:['Metformin 500 mg','Amlodipine 5 mg'],ec:{ar:'محمد (الابن) · 0790 334 2210',en:'Mohammed (son) · 0790 334 2210'},
+  notes:{ar:'طقم كامل علوي، وطقم جزئي سفلي. تفضّل الواتساب ورسائل صوتية. ما تستخدم التطبيق.',en:'Complete upper denture and partial lower. Prefers WhatsApp and voice notes. Does not use the app.'},
+  teeth:Object.fromEntries([18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28,48,47,46,36,37,38].map(n=>[n,'extracted'])),
+  xrays:[{type:'pano',d:-30,seed:23,note:{ar:'بانوراما قبل الطقم',en:'Pano before denture'}}],
+  sessions:[{d:-30,s:'done',t:{ar:'فحص وطبعة أولية',en:'Exam and first impression'},dr:'mk'},{d:-6,s:'done',t:{ar:'طبعة نهائية',en:'Final impression'},dr:'mk'},{d:0,s:'next',t:{ar:'قياس الطقم',en:'Denture try-in'},dr:'mk'},{s:'plan',t:{ar:'تسليم الطقم',en:'Denture delivery'}}],
+  meds:[],sent:['denture']},
+ {id:3,name:{ar:'زينب حيدر محمد',en:'Zainab Haider Mohammed'},sex:'f',age:28,phone:'0771 302 8844',ch:'app',blood:'B+',file:'MK-0149',status:'active',last:0,
+  conditions:[],allergies:[],pregnant:true,preg:{ar:'حامل، الأسبوع 24',en:'Pregnant, week 24'},current:[{ar:'فيتامينات الحمل',en:'Prenatal vitamins'}],ec:{ar:'حيدر (الزوج) · 0771 990 1123',en:'Haider (husband) · 0771 990 1123'},
+  notes:{ar:'حامل بالشهر السادس. لا أشعة إلا للضرورة مع واقي رصاصي. حشوة تجميلية 24 اليوم.',en:'Six months pregnant. X-rays only if essential, with lead apron. Composite filling on 24 today.'},
+  teeth:{24:'filling',15:'caries'},xrays:[],
+  sessions:[{d:0,s:'done',t:{ar:'حشوة تجميلية 24',en:'Composite filling on 24'},dr:'sn'},{s:'plan',t:{ar:'حشوة 15',en:'Filling on 15'}},{s:'plan',t:{ar:'تنظيف وتلميع',en:'Scale and polish'}}],
+  meds:[],sent:['filling']},
+ {id:4,name:{ar:'حسين جاسم كاظم',en:'Hussein Jassim Kadhim'},sex:'m',age:72,phone:'0790 118 7720',ch:'wa',blood:'A-',file:'MK-0151',status:'alert',last:-1,
+  conditions:[{ar:'رجفان أذيني',en:'Atrial fibrillation'},{ar:'ضغط',en:'Hypertension'}],allergies:[{ar:'بنسلين',en:'Penicillin'}],pregnant:false,current:['Warfarin 5 mg','Bisoprolol 5 mg'],ec:{ar:'سعاد (البنت) · 0781 220 9076',en:'Suad (daughter) · 0781 220 9076'},
+  notes:{ar:'يأخذ وارفارين. INR قبل القلع 2.4 بالتنسيق مع طبيب القلب. قلع 46 مع خياطة وإسفنجة مرقئة.',en:'On warfarin. INR 2.4 before extraction, coordinated with cardiologist. Extraction of 46 with sutures and haemostatic sponge.'},
+  teeth:{46:'extracted',36:'crown',45:'rct'},
+  xrays:[{type:'pa',d:-1,seed:9,missing:[1],note:{ar:'قبل قلع 46',en:'Before extracting 46'}}],
+  sessions:[{d:-1,s:'done',t:{ar:'قلع 46 + غرز',en:'Extraction of 46, sutures'},dr:'mk'},{d:0,s:'next',t:{ar:'مراجعة طارئة: نزيف',en:'Urgent review: bleeding'},dr:'mk'}],
+  meds:[{name:'Clindamycin 300 mg',how:{ar:'كبسولة كل 8 ساعات (بديل البنسلين)',en:'1 capsule every 8 h (penicillin alternative)'},times:['08:00','16:00','00:00'],days:5,start:-1},{name:'Paracetamol 500 mg',how:{ar:'عند الألم، حد أعلى 4 باليوم',en:'When needed, max 4 a day'},times:[],prn:true,days:3,start:-1}],
+  sent:['extraction']},
+ {id:5,name:{ar:'مريم سعد جبار',en:'Mariam Saad Jabbar'},sex:'f',age:19,phone:'0772 640 1173',ch:'app',blood:'O-',file:'MK-0133',status:'active',last:-28,
+  conditions:[],allergies:[],pregnant:false,current:[],ec:{ar:'سعد (الأب) · 0772 100 4433',en:'Saad (father) · 0772 100 4433'},
+  notes:{ar:'تقويم ثابت معدني، الشهر الخامس. مطاط Class II.',en:'Fixed metal braces, month 5. Class II elastics.'},
+  teeth:{},xrays:[{type:'pano',d:-150,seed:31,note:{ar:'بانوراما قبل التقويم',en:'Pano before orthodontics'}}],
+  sessions:[{d:-28,s:'done',t:{ar:'شد التقويم',en:'Brace adjustment'},dr:'sn'},{d:0,s:'next',t:{ar:'شد التقويم',en:'Brace adjustment'},dr:'sn'}],
+  meds:[],sent:['ortho']},
+ {id:6,name:{ar:'عمر خالد إبراهيم',en:'Omar Khalid Ibrahim'},sex:'m',age:45,phone:'0781 905 3361',ch:'app',blood:'AB+',file:'MK-0119',status:'active',last:-21,
+  conditions:[{ar:'مدخن',en:'Smoker'}],allergies:[],pregnant:false,current:[],ec:{ar:'—',en:'—'},
+  notes:{ar:'زراعة 36 قبل 3 أسابيع. شُرح له خطر التدخين على الزراعة.',en:'Implant at 36 three weeks ago. Smoking risk to the implant explained.'},
+  teeth:{36:'implant',14:'crown'},xrays:[{type:'pa',d:-21,seed:17,note:{ar:'بعد الزراعة 36',en:'After implant at 36'}}],
+  sessions:[{d:-21,s:'done',t:{ar:'زراعة 36',en:'Implant at 36'},dr:'mk'},{d:0,s:'next',t:{ar:'مراجعة الزراعة',en:'Implant review'},dr:'mk'},{s:'plan',t:{ar:'تاج على الزراعة بعد 3 أشهر',en:'Implant crown in 3 months'}}],
+  meds:[],sent:['implant']},
+ {id:7,name:{ar:'نور الهدى عباس',en:'Noor Al-Huda Abbas'},sex:'f',age:9,phone:'0770 771 2408',ch:'wa',blood:'—',file:'MK-0156',status:'active',last:-60,
+  conditions:[],allergies:[],pregnant:false,current:[],ec:{ar:'الأم: رنا · 0770 771 2408',en:'Mother: Rana · 0770 771 2408'},guardian:true,
+  notes:{ar:'طفلة. التواصل مع الأم. فلورايد وسد شقوق للأضراس الدائمة.',en:'Child. Contact through the mother. Fluoride and fissure sealants on permanent molars.'},
+  teeth:{16:'planned',26:'planned',36:'planned',46:'planned'},xrays:[],
+  sessions:[{d:-60,s:'done',t:{ar:'فحص وتنظيف',en:'Exam and cleaning'},dr:'sn'},{d:0,s:'next',t:{ar:'فلورايد وسد شقوق',en:'Fluoride and sealants'},dr:'sn'}],
+  meds:[],sent:[]}
+];
+const P=id=>PATIENTS.find(p=>p.id===id);
+
+let APPTS=[
+ {id:1,pid:3,d:0,t:'16:00',w:{ar:'حشوة تجميلية 24',en:'Composite filling 24'},dr:'sn',st:'done'},
+ {id:2,pid:6,d:0,t:'16:45',w:{ar:'مراجعة زراعة 36',en:'Implant review 36'},dr:'mk',st:'chair'},
+ {id:3,pid:5,d:0,t:'17:30',w:{ar:'شد التقويم',en:'Brace adjustment'},dr:'sn',st:'wait'},
+ {id:4,pid:2,d:0,t:'18:30',w:{ar:'قياس الطقم',en:'Denture try-in'},dr:'mk',st:'booked'},
+ {id:5,pid:4,d:0,t:'19:00',w:{ar:'مراجعة طارئة: نزيف بعد القلع',en:'Urgent: post-extraction bleeding'},dr:'mk',st:'alert'},
+ {id:6,pid:7,d:0,t:'20:00',w:{ar:'فلورايد وسد شقوق',en:'Fluoride and sealants'},dr:'sn',st:'booked'},
+ {id:7,pid:3,d:2,t:'17:00',w:{ar:'حشوة 15',en:'Filling 15'},dr:'sn',st:'booked'},
+ {id:8,pid:1,d:6,t:'17:30',w:{ar:'فك الغرز والمراجعة',en:'Suture removal and check-up'},dr:'mk',st:'booked'},
+ {id:9,pid:2,d:4,t:'18:00',w:{ar:'تسليم الطقم',en:'Denture delivery'},dr:'mk',st:'booked'},
+ {id:10,pid:4,d:7,t:'18:30',w:{ar:'فك الغرز',en:'Suture removal'},dr:'mk',st:'booked'}
+];
+let INBOX=[
+ {id:1,pid:4,ch:'wa',min:18,kind:'emergency',q:{ar:'الدم بعده ما واقف من مكان القلع من الظهر، وآني آخذ دوا السيولة',en:'The bleeding from the extraction hasn\'t stopped since noon, and I take blood thinners'},
+  why:{ar:'نزيف بعد القلع + المريض يأخذ وارفارين',en:'Post-extraction bleeding + patient on warfarin'},sent:{ar:'تم إرسال تعليمات الضغط بالشاش وطلب الاتصال بالعيادة. أُرسل لك تنبيه.',en:'Gauze-pressure instructions sent and patient asked to call. You were alerted.'}},
+ {id:2,pid:1,ch:'app',min:42,kind:'pending',q:{ar:'أقدر آخذ حبتين بروفين مرة وحدة لأن الألم قوي؟',en:'Can I take two ibuprofen at once because the pain is strong?'},
+  why:{ar:'طلب تغيير جرعة',en:'Asks to change a dose'},draft:{ar:'لا يا أحمد، لا تاخذ حبتين مرة وحدة. خذ حبة 400 ملغ، وإذا الألم ما خف بعد ساعتين تقدر تاخذ باراسيتامول 500 ملغ. إذا الألم يزيد بعد اليوم الثالث راجعنا.',en:'No Ahmed, do not take two at once. Take one 400 mg tablet; if the pain has not eased after two hours you can take paracetamol 500 mg. If the pain gets worse after day 3, come and see us.'}},
+ {id:3,pid:3,ch:'app',min:75,kind:'pending',q:{ar:'عندي ألم خفيف بالسن اللي حشيته اليوم، أقدر آخذ بروفين؟',en:'I have mild pain in the tooth filled today, can I take ibuprofen?'},
+  why:{ar:'مريضة حامل + سؤال عن دواء',en:'Pregnant patient + medicine question'},draft:{ar:'بسبب الحمل لا تاخذين بروفين. تقدرين تاخذين باراسيتامول 500 ملغ عند الحاجة، ولا تزيدين عن 4 حبات باليوم. الحساسية الخفيفة بعد الحشوة طبيعية وتخف خلال أيام.',en:'Because of the pregnancy, please do not take ibuprofen. You can take paracetamol 500 mg when needed, up to 4 a day. Mild sensitivity after a filling is normal and fades within days.'}},
+ {id:4,pid:5,ch:'app',min:130,kind:'auto',q:{ar:'كم ساعة لازم ألبس المطاط باليوم؟',en:'How many hours a day should I wear the elastics?'},a:{ar:'حسب تعليمات الدكتورة سارة: 22 ساعة باليوم. تشيلينه بس وقت الأكل والتفريش، وتبدلينه بمطاط جديد كل يوم.',en:'Per Dr. Sara\'s instructions: 22 hours a day. Remove them only to eat and brush, and change to new elastics every day.'},src:{ar:'تعليمات التقويم',en:'Orthodontic instructions'}},
+ {id:5,pid:2,ch:'wa',min:210,kind:'auto',q:{ar:'شلون أنظف الطقم؟',en:'How do I clean the denture?'},a:{ar:'نظفي الطقم كل يوم بفرشاة ناعمة وصابون عادي (مو معجون)، وخليه بالليل بكوب ماء. لا تستخدمين ماء حار.',en:'Clean it daily with a soft brush and plain soap (not toothpaste), and keep it in a glass of water at night. Do not use hot water.'},src:{ar:'تعليمات الطقم',en:'Denture instructions'}},
+ {id:6,pid:1,ch:'app',min:300,kind:'auto',q:{ar:'متى أقدر آكل طبيعي؟',en:'When can I eat normally?'},a:{ar:'من اليوم الثاني تقدر ترجع تدريجياً للأكل العادي. امضغ على الجهة اليمنى وابتعد عن الأكل الحار والقاسي لحد فك الغرز.',en:'From day 2 you can gradually return to normal food. Chew on the right and avoid spicy and hard food until the sutures are out.'},src:{ar:'تعليمات ما بعد القلع',en:'Post-extraction instructions'}}
+];
+let REMINDERS=[
+ {pid:1,d:0,t:'15:00',w:{ar:'كبسولة أموكسيسيلين',en:'Amoxicillin capsule'},ch:['app','wa'],st:'scheduled'},
+ {pid:1,d:0,t:'07:00',w:{ar:'كبسولة أموكسيسيلين',en:'Amoxicillin capsule'},ch:['app','wa'],st:'read'},
+ {pid:1,d:0,t:'09:00',w:{ar:'غسول الكلورهيكسيدين + تعليمة اليوم الثاني',en:'Chlorhexidine rinse + day-2 instruction'},ch:['app','wa'],st:'read'},
+ {pid:2,d:0,t:'16:30',w:{ar:'تذكير بموعد قياس الطقم 6:30 م',en:'Reminder: denture try-in at 6:30 PM'},ch:['wa'],st:'sent'},
+ {pid:4,d:0,t:'12:00',w:{ar:'متابعة: كيف الألم اليوم من 1 إلى 10؟',en:'Follow-up: pain today from 1 to 10?'},ch:['wa'],st:'read'},
+ {pid:4,d:0,t:'16:00',w:{ar:'كبسولة كليندامايسين',en:'Clindamycin capsule'},ch:['wa'],st:'scheduled'},
+ {pid:5,d:0,t:'21:00',w:{ar:'بدّلي المطاط',en:'Change your elastics'},ch:['app'],st:'scheduled'},
+ {pid:1,d:0,t:'21:00',w:{ar:'غسول الكلورهيكسيدين',en:'Chlorhexidine rinse'},ch:['app','wa'],st:'scheduled'},
+ {pid:1,d:0,t:'23:00',w:{ar:'كبسولة أموكسيسيلين',en:'Amoxicillin capsule'},ch:['app','wa'],st:'scheduled'},
+ {pid:6,d:1,t:'10:00',w:{ar:'متابعة الزراعة: لا تدخين',en:'Implant follow-up: no smoking'},ch:['app'],st:'scheduled'},
+ {pid:1,d:5,t:'18:00',w:{ar:'باجر موعد فك الغرز 5:30 م',en:'Tomorrow: suture removal at 5:30 PM'},ch:['app','wa'],st:'scheduled'}
+];
+const TEMPLATES={
+ extraction:{t:{ar:'ما بعد القلع',en:'After an extraction'},body:{ar:'اعضّ على الشاش 30 دقيقة.\nلا تمضمض ولا تبصق ولا تستخدم الشفاطة أول 24 ساعة.\nكمادات باردة أول يوم.\nأكل بارد وناعم أول يوم.\nمن اليوم الثاني: مضمضة بماء وملح بعد الأكل.\nلا تدخين 72 ساعة على الأقل.\nاتصل فوراً إذا النزيف ما وقف بعد 30 دقيقة ضغط.',en:'Bite on gauze for 30 minutes.\nNo rinsing, spitting or straws for 24 hours.\nCold packs on day one.\nCold, soft food on day one.\nFrom day 2: salt-water rinse after meals.\nNo smoking for at least 72 hours.\nCall straight away if bleeding does not stop after 30 minutes of pressure.'}},
+ rct:{t:{ar:'علاج العصب',en:'Root canal'},body:{ar:'لا تاكل لحد ما يروح التخدير.\nامضغ على الجهة الثانية لحد التاج.\nألم خفيف 2 إلى 3 أيام طبيعي.\nالحشوة المؤقتة ممكن تنقص شوية، إذا طاحت كلها اتصل بينا.',en:'Do not eat until the numbness wears off.\nChew on the other side until the crown is fitted.\nMild pain for 2 to 3 days is normal.\nThe temporary filling may wear slightly; call us if it falls out.'}},
+ filling:{t:{ar:'ما بعد الحشوة',en:'After a filling'},body:{ar:'الحشوة التجميلية تقدر تاكل عليها بعد ما يروح التخدير.\nحساسية خفيفة للبارد طبيعية لأسبوع أو أسبوعين.\nإذا العضة حاسها عالية، راجعنا لتعديلها.',en:'You can eat on a composite filling once the numbness wears off.\nMild cold sensitivity is normal for one to two weeks.\nIf your bite feels high, come back to adjust it.'}},
+ implant:{t:{ar:'ما بعد الزراعة',en:'After an implant'},body:{ar:'لا تدخين أبداً لأسبوعين على الأقل.\nأكل ناعم أسبوع، وامضغ على الجهة الثانية.\nكمادات باردة أول 48 ساعة.\nكمّل المضاد الحيوي للآخر.',en:'No smoking at all for at least two weeks.\nSoft food for a week, chewing on the other side.\nCold packs for the first 48 hours.\nFinish the full antibiotic course.'}},
+ ortho:{t:{ar:'التقويم',en:'Braces'},body:{ar:'المطاط 22 ساعة باليوم، وبدّله كل يوم.\nابتعد عن العلك والأكل اللزج والقاسي.\nنظّف بين السلوك بالفرشاة الصغيرة بعد كل أكلة.\nإذا انكسر براكت، اتصل لتحديد موعد.',en:'Wear elastics 22 hours a day and change them daily.\nAvoid gum, sticky and hard food.\nClean between the wires with the small brush after every meal.\nIf a bracket breaks, call to book a visit.'}},
+ denture:{t:{ar:'الطقم',en:'Dentures'},body:{ar:'نظّف الطقم كل يوم بفرشاة ناعمة وصابون.\nشيله بالليل وخليه بكوب ماء.\nأول أسبوع ممكن تحس بتقرحات خفيفة، تعال حتى نعدله.\nلا تستخدم ماء حار.',en:'Clean the denture daily with a soft brush and soap.\nTake it out at night and keep it in water.\nIn the first week you may get small sore spots; come in to adjust it.\nDo not use hot water.'}},
+ cleaning:{t:{ar:'ما بعد التنظيف',en:'After a cleaning'},body:{ar:'حساسية خفيفة يوم أو يومين طبيعية.\nالمراجعة القادمة بعد 6 أشهر.',en:'Mild sensitivity for a day or two is normal.\nNext check-up in 6 months.'}}
+};
+const PERMS=[['patients',{ar:'عرض المرضى',en:'View patients'}],['medical',{ar:'تعديل الملف الطبي',en:'Edit medical file'}],['xray',{ar:'الأشعة',en:'X-rays'}],['rx',{ar:'وصف الأدوية',en:'Prescribe'}],['ai',{ar:'الموافقة على ردود المساعد',en:'Approve assistant replies'}],['appts',{ar:'المواعيد',en:'Appointments'}],['team',{ar:'إدارة الفريق',en:'Manage team'}]];
+const ROLES={owner:{ar:'طبيب، مدير العيادة',en:'Dentist, clinic owner'},doctor:{ar:'طبيب',en:'Dentist'},assistant:{ar:'مساعد طبيب',en:'Dental assistant'},reception:{ar:'استقبال',en:'Reception'}};
+const PRESET={owner:{patients:1,medical:1,xray:1,rx:1,ai:1,appts:1,team:1},doctor:{patients:1,medical:1,xray:1,rx:1,ai:1,appts:1,team:0},assistant:{patients:1,medical:0,xray:1,rx:0,ai:0,appts:1,team:0},reception:{patients:1,medical:0,xray:0,rx:0,ai:0,appts:1,team:0}};
+let TEAM=[
+ {id:1,name:{ar:'د. مصطفى كمال',en:'Dr. Mustafa Kamal'},phone:'0770 980 4412',role:'owner',p:{...PRESET.owner}},
+ {id:2,name:{ar:'د. سارة ناظم',en:'Dr. Sara Nadhim'},phone:'0771 448 2091',role:'doctor',p:{...PRESET.doctor}},
+ {id:3,name:{ar:'علي رضا',en:'Ali Ridha'},phone:'0780 612 7735',role:'assistant',p:{...PRESET.assistant}},
+ {id:4,name:{ar:'هبة يوسف',en:'Hiba Yousif'},phone:'0790 271 5584',role:'reception',p:{...PRESET.reception}}
+];
+const AI={auto:true,rules:{dose:true,symptom:true,preg:true,unknown:true,price:false},emergency:true};
+const TOOTH={healthy:{ar:'سليم',en:'Healthy'},caries:{ar:'تسوس',en:'Caries'},filling:{ar:'حشوة',en:'Filling'},rct:{ar:'عصب',en:'Root canal'},crown:{ar:'تاج',en:'Crown'},implant:{ar:'زراعة',en:'Implant'},extracted:{ar:'مقلوع',en:'Missing'},planned:{ar:'مخطط للعلاج',en:'Planned'}};
+
+/* ---------- UI text ---------- */
+const T={
+ ar:{today:'اليوم',patients:'المرضى',patient:'ملف المريض',appointments:'المواعيد',inbox:'أسئلة المرضى',reminders:'التذكيرات',templates:'نماذج التعليمات',team:'الفريق والصلاحيات',clinic:'إعدادات العيادة',
+  demo:'نموذج تجريبي، بيانات وهمية',evening:'مساء الخير، د. مصطفى',sMonth:'مرضى هذا الشهر',sWeek:'مواعيد هذا الأسبوع',sAuto:'أسئلة جاوبها المساعد',sPending:'تنتظر موافقتك',
+  emergencyNow:'حالة طارئة',open:'فتح',review:'مراجعة',pendingN:n=>`${n} أسئلة تنتظر موافقتك قبل ما توصل للمريض`,schedule:'جدول اليوم',followups:'متابعات بعد الإجراء',sentToday:'تذكيرات اليوم',all:'الكل',
+  st:{done:'مكتمل',chair:'على الكرسي',wait:'بالانتظار',booked:'محجوز',alert:'طارئ'},
+  search:'ابحث بالاسم أو الهاتف أو رقم الملف',addPatient:'مريض جديد',fAll:'الكل',fFollow:'متابعة',fWa:'واتساب فقط',fAlert:'تنبيه',
+  colName:'المريض',colPhone:'الهاتف',colLast:'آخر زيارة',colStatus:'الحالة',colCh:'التواصل',colFlags:'تنبيهات طبية',
+  pst:{followup:'متابعة',active:'تحت العلاج',alert:'تنبيه',done:'مكتمل'},chApp:'تطبيق + واتساب',chWa:'واتساب فقط',
+  years:n=>`${n} سنة`,male:'ذكر',female:'أنثى',fileNo:'رقم الملف',
+  tabs:{file:'الملف الطبي',teeth:'الأسنان',xray:'الأشعة',tx:'العلاج والجلسات',meds:'الأدوية',care:'التعليمات والتذكيرات',chat:'المحادثات'},
+  sendCare:'إرسال تعليمات',addMed:'إضافة دواء',book:'حجز موعد',
+  phone:'الهاتف',age:'العمر',sex:'الجنس',blood:'فصيلة الدم',ec:'شخص للطوارئ',cond:'أمراض مزمنة',allergy:'حساسية',curMeds:'أدوية يأخذها',none:'لا يوجد',preg:'حمل',notes:'ملاحظات الطبيب',saveNotes:'حفظ الملاحظات',saved:'تم الحفظ',
+  teethHelp:'اضغط على أي سن لتغيير حالته. الترقيم حسب النظام الدولي FDI.',upperR:'الفك العلوي، اليمين',upperL:'الفك العلوي، اليسار',lowerR:'الفك السفلي، اليمين',lowerL:'الفك السفلي، اليسار',toothN:n=>`السن ${n}`,
+  uploadX:'ارفع أشعة أو صورة',uploadHint:'اضغط لاختيار ملف من جهازك (JPG أو PNG)',xNote:'ملاحظة على الأشعة',visible:'يشوفها المريض',hidden:'عند الطبيب فقط',
+  sDone:'تم',sNext:'القادم',sPlan:'مخطط',addSession:'إضافة جلسة',
+  prn:'عند الحاجة',dayOf:(a,b)=>`اليوم ${a} من ${b}`,times:'أوقات التذكير',noMeds:'ما فيه أدوية حالياً.',
+  sentTpl:'التعليمات المرسلة',schedRem:'تذكيرات هذا المريض',channel:'طريقة التواصل',
+  noChat:'ما فيه محادثات لهذا المريض.',
+  newAppt:'موعد جديد',
+  ibPending:'تنتظر موافقتك',ibEm:'طارئة',ibAuto:'جاوبها المساعد',draft:'رد المساعد المقترح',approve:'موافقة وإرسال',called:'تواصلت مع المريض',why:'سبب التحويل',answered:'تم الإرسال للمريض',
+  autoNote:'المساعد جاوب مباشرة لأن الجواب موجود بتعليماتك وملف المريض.',src:'المصدر',empty:'ما فيه شي هنا.',
+  remCols:['الوقت','المريض','التذكير','القناة','الحالة'],rst:{sent:'أُرسل',read:'قُرئ',scheduled:'مجدول'},remRules:'القواعد الافتراضية',remRule1:'تذكير بالموعد قبله بيوم الساعة 6:00 م، وقبله بساعتين.',remRule2:'تذكير الدواء بأوقات الجرعات اللي تحددها.',remRule3:'سؤال متابعة الألم بعد أي إجراء جراحي بيوم.',remRule4:'كبار السن: واتساب فقط، ورسالة أوضح وأقصر.',
+  tplTitle:'العنوان',tplBody:'التعليمات (كل سطر تعليمة)',saveTpl:'حفظ النموذج',newTpl:'نموذج جديد',
+  role:'الدور',addMember:'إضافة موظف',owner:'المالك',permNote:'الصلاحيات تتغير فوراً. صلاحيات المالك ما تتغير.',
+  clinicInfo:'معلومات العيادة',name:'الاسم',address:'العنوان',hours:'الدوام',waNum:'رقم الواتساب',aiT:'المساعد الذكي',aiAuto:'يجاوب المريض مباشرة إذا الجواب موجود بالملف أو بالتعليمات',aiAsk:'دائماً ينتظر موافقتي في هذي الحالات:',
+  rDose:'تغيير جرعة أو إيقاف دواء',rSym:'أعراض جديدة ما مذكورة بالملف',rPreg:'أي سؤال عن دواء لمريضة حامل',rUnk:'أي شي ما موجود بالملف أو التعليمات',rPrice:'الأسعار والتكاليف',aiEm:'بالحالات الطارئة (نزيف، تورم، حرارة، صعوبة تنفس): يطلب من المريض يتصل فوراً ويرسلي تنبيه',
+  patientLink:'رابط تطبيق المريض',copy:'نسخ',copied:'تم النسخ',linkHint:'كل مريض يدخل برقم هاتفه ورمز يوصله على الواتساب.',saveClinic:'حفظ',
+  cancel:'إلغاء',add:'إضافة',send:'إرسال',fullName:'الاسم الكامل',condH:'افصل بينها بفاصلة',chooseTpl:'اختر النموذج',preview:'معاينة',sendBy:'الإرسال عبر',viaApp:'التطبيق',viaWa:'واتساب',
+  medName:'اسم الدواء',dose:'الجرعة والطريقة',perDay:'كم مرة باليوم',days:'كم يوم',isPrn:'عند الحاجة فقط (بدون تذكير بوقت)',confirmWarn:'راجعت التحذير وأريد أضيف الدواء',
+  wPen:'المريض عنده حساسية من البنسلين. هذا الدواء من عائلة البنسلين.',wPreg:'المريضة حامل. هذا الدواء غير مفضل أثناء الحمل.',wWarf:'المريض يأخذ وارفارين. هذا الدواء يزيد خطر النزيف.',warnT:'تحذير',
+  date:'التاريخ',time:'الوقت',what:'الإجراء',doctor:'الطبيب',remind:'إرسال تذكير للمريض',added:'تمت الإضافة',sent:'تم الإرسال',
+  sessWhat:'شنو انسوى',sessStatus:'الحالة',toothStatus:'حالة السن',toothNote:'ملاحظة',saveTooth:'حفظ',
+  lang:'English',logout:'خروج'},
+ en:{today:'Today',patients:'Patients',patient:'Patient file',appointments:'Appointments',inbox:'Patient questions',reminders:'Reminders',templates:'Instruction templates',team:'Team & permissions',clinic:'Clinic settings',
+  demo:'Demo prototype, made-up data',evening:'Good evening, Dr. Mustafa',sMonth:'Patients this month',sWeek:'Appointments this week',sAuto:'Answered by the assistant',sPending:'Waiting for you',
+  emergencyNow:'Emergency',open:'Open',review:'Review',pendingN:n=>`${n} questions are waiting for your approval before reaching the patient`,schedule:"Today's schedule",followups:'Post-procedure follow-ups',sentToday:"Today's reminders",all:'All',
+  st:{done:'Done',chair:'In the chair',wait:'Waiting',booked:'Booked',alert:'Urgent'},
+  search:'Search by name, phone or file number',addPatient:'New patient',fAll:'All',fFollow:'Follow-up',fWa:'WhatsApp only',fAlert:'Alert',
+  colName:'Patient',colPhone:'Phone',colLast:'Last visit',colStatus:'Status',colCh:'Contact',colFlags:'Medical alerts',
+  pst:{followup:'Follow-up',active:'In treatment',alert:'Alert',done:'Complete'},chApp:'App + WhatsApp',chWa:'WhatsApp only',
+  years:n=>`${n} yrs`,male:'Male',female:'Female',fileNo:'File no.',
+  tabs:{file:'Medical file',teeth:'Teeth',xray:'X-rays',tx:'Treatment & visits',meds:'Medicines',care:'Instructions & reminders',chat:'Conversations'},
+  sendCare:'Send instructions',addMed:'Add medicine',book:'Book appointment',
+  phone:'Phone',age:'Age',sex:'Sex',blood:'Blood group',ec:'Emergency contact',cond:'Chronic conditions',allergy:'Allergies',curMeds:'Current medicines',none:'None',preg:'Pregnancy',notes:"Doctor's notes",saveNotes:'Save notes',saved:'Saved',
+  teethHelp:'Click any tooth to change its status. FDI numbering.',upperR:'Upper right',upperL:'Upper left',lowerR:'Lower right',lowerL:'Lower left',toothN:n=>`Tooth ${n}`,
+  uploadX:'Upload an X-ray or photo',uploadHint:'Click to choose a file (JPG or PNG)',xNote:'Note on the X-ray',visible:'Visible to patient',hidden:'Doctor only',
+  sDone:'Done',sNext:'Next',sPlan:'Planned',addSession:'Add visit',
+  prn:'As needed',dayOf:(a,b)=>`Day ${a} of ${b}`,times:'Reminder times',noMeds:'No current medicines.',
+  sentTpl:'Instructions sent',schedRem:"This patient's reminders",channel:'Contact channel',
+  noChat:'No conversations for this patient.',
+  newAppt:'New appointment',
+  ibPending:'Waiting for you',ibEm:'Urgent',ibAuto:'Answered by assistant',draft:'Suggested reply',approve:'Approve and send',called:'I contacted the patient',why:'Why it was held',answered:'Sent to the patient',
+  autoNote:'The assistant answered directly because the answer is in your instructions and the patient file.',src:'Source',empty:'Nothing here.',
+  remCols:['Time','Patient','Reminder','Channel','Status'],rst:{sent:'Sent',read:'Read',scheduled:'Scheduled'},remRules:'Default rules',remRule1:'Appointment reminder the day before at 6:00 PM, and two hours before.',remRule2:'Medicine reminders at the dose times you set.',remRule3:'Pain follow-up question one day after any surgical procedure.',remRule4:'Older patients: WhatsApp only, with shorter, clearer messages.',
+  tplTitle:'Title',tplBody:'Instructions (one per line)',saveTpl:'Save template',newTpl:'New template',
+  role:'Role',addMember:'Add staff member',owner:'Owner',permNote:'Changes apply immediately. Owner permissions cannot be changed.',
+  clinicInfo:'Clinic details',name:'Name',address:'Address',hours:'Hours',waNum:'WhatsApp number',aiT:'Assistant',aiAuto:'Answer patients directly when the answer is in their file or your instructions',aiAsk:'Always wait for my approval for:',
+  rDose:'Dose changes or stopping a medicine',rSym:'New symptoms not in the file',rPreg:'Any medicine question from a pregnant patient',rUnk:'Anything not in the file or instructions',rPrice:'Prices and costs',aiEm:'In emergencies (bleeding, swelling, fever, trouble breathing): tell the patient to call now and alert me',
+  patientLink:'Patient app link',copy:'Copy',copied:'Copied',linkHint:'Each patient signs in with their phone number and a code sent on WhatsApp.',saveClinic:'Save',
+  cancel:'Cancel',add:'Add',send:'Send',fullName:'Full name',condH:'Separate with commas',chooseTpl:'Choose a template',preview:'Preview',sendBy:'Send by',viaApp:'App',viaWa:'WhatsApp',
+  medName:'Medicine name',dose:'Dose and directions',perDay:'Times a day',days:'Days',isPrn:'Only when needed (no timed reminder)',confirmWarn:'I have reviewed the warning and want to add it',
+  wPen:'Patient is allergic to penicillin. This medicine is in the penicillin family.',wPreg:'Patient is pregnant. This medicine is not preferred in pregnancy.',wWarf:'Patient takes warfarin. This medicine raises bleeding risk.',warnT:'Warning',
+  date:'Date',time:'Time',what:'Procedure',doctor:'Dentist',remind:'Send the patient a reminder',added:'Added',sent:'Sent',
+  sessWhat:'What was done',sessStatus:'Status',toothStatus:'Tooth status',toothNote:'Note',saveTooth:'Save',
+  lang:'عربي',logout:'Sign out'}
+};
+const t=k=>T[A.lang][k];
+
+/* ---------- icons ---------- */
+const svg=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I={
+ tooth:svg('<path d="M7 3.5c-2.5 0-4 2-4 4.5 0 3 1.5 4.5 2 7.5.4 2.5 1 5 2.5 5s1.6-3.5 2.5-5.5c.5-1 1.5-1 2 0 .9 2 1 5.5 2.5 5.5s2.1-2.5 2.5-5c.5-3 2-4.5 2-7.5 0-2.5-1.5-4.5-4-4.5-2 0-3 1-5 1s-3-1-5-1z"/>'),
+ today:svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+ users:svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3.2-5.5 6.5-5.5s6 2 6.5 5.5M16 4.8a3.3 3.3 0 0 1 0 6.4M18 14.8c2 .6 3.3 2.4 3.5 5.2"/>'),
+ cal:svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/>'),
+ chat:svg('<path d="M4 5h16v11H9l-5 4z"/>'),
+ bell:svg('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/>'),
+ doc:svg('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>'),
+ shield:svg('<path d="M12 3 4.5 6v6c0 4.5 3.2 7.7 7.5 9 4.3-1.3 7.5-4.5 7.5-9V6z"/><path d="m9 12 2 2 4-4"/>'),
+ gear:svg('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/>'),
+ alert:svg('<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17v.1"/>'),
+ clock:svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+ plus:svg('<path d="M12 5v14M5 12h14"/>')
+};
+const toothSvg='<svg viewBox="0 0 24 28" fill="currentColor" opacity=".85"><path d="M6 2C3.2 2 1.5 4.3 1.5 7.2c0 3.4 1.7 5.2 2.3 8.6.5 2.9 1.2 10.2 3 10.2s1.8-5.2 2.9-7.5c.6-1.2 1.9-1.2 2.5 0 1.1 2.3 1.1 7.5 2.9 7.5s2.5-7.3 3-10.2c.6-3.4 2.3-5.2 2.3-8.6C22.4 4.3 20.7 2 17.9 2c-2.3 0-3.5 1.1-5.9 1.1S8.3 2 6 2z" opacity=".35"/></svg>';
+
+/* ---------- synthetic X-ray ---------- */
+function rng(seed){let s=seed*9973%233280;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath()}
+function drawTooth(c,x,yOcc,w,len,dir,fill){const g=c.createLinearGradient(0,yOcc,0,yOcc+dir*len);g.addColorStop(0,'rgba(235,238,240,.95)');g.addColorStop(.28,'rgba(200,205,208,.85)');g.addColorStop(1,'rgba(120,126,130,.35)');c.fillStyle=g;rr(c,x-w/2,dir>0?yOcc:yOcc-len,w,len,w*.35);c.fill();c.fillStyle='rgba(40,44,46,.55)';const cw=w*.18;rr(c,x-cw/2,dir>0?yOcc+len*.3:yOcc-len*.92,cw,len*.62,cw/2);c.fill();if(fill){c.fillStyle='rgba(255,255,255,.98)';rr(c,x-w*.28,dir>0?yOcc+2:yOcc-len*.22,w*.56,len*.2,4);c.fill()}}
+function drawXray(cv,x,teeth){
+  const c=cv.getContext('2d'),W=cv.width,H=cv.height,r=rng(x.seed||5);
+  c.fillStyle='#050607';c.fillRect(0,0,W,H);const g=c.createRadialGradient(W/2,H/2,10,W/2,H/2,W*.65);g.addColorStop(0,'rgba(110,118,122,.55)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+  try{c.filter='blur(1.2px)'}catch(e){}
+  if(x.type==='pano'){
+    c.strokeStyle='rgba(180,186,190,.18)';c.lineWidth=22;c.beginPath();c.ellipse(W/2,H*.2,W*.44,H*.68,0,.12*Math.PI,.88*Math.PI);c.stroke();
+    const up=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],lo=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+    const n=16,span=W*.74,x0=W*.13,tw=span/n*.82;
+    [up,lo].forEach((arr,row)=>arr.forEach((num,i)=>{const tt=(i+.5)/n,cx=x0+tt*span,cc=Math.pow((tt-.5)*2,2),mol=Math.abs(tt-.5)>.3;
+      const st=teeth&&teeth[num];if(st==='extracted'&&x.d>-20)return;
+      drawTooth(c,cx,H*.5+(row?6:-6)-cc*H*.07,mol?tw*1.12:tw*.86,(mol?H*.25:H*.3)*(.92+r()*.12),row?1:-1,st==='filling'||st==='crown'||r()>.9)}));
+  }else{
+    const tw=W*.2;for(let i=0;i<3;i++){const cx=W*(.24+i*.26);if((x.missing||[]).includes(i)){c.fillStyle='rgba(20,22,24,.8)';rr(c,cx-tw*.4,H*.18,tw*.8,H*.5,tw*.3);c.fill();continue}drawTooth(c,cx,H*.1,tw,H*.75,1,i===0)}
+  }
+  try{c.filter='none'}catch(e){}
+  for(let k=0;k<1600;k++){c.fillStyle=`rgba(255,255,255,${r()*.05})`;c.fillRect(r()*W,r()*H,1.5,1.5)}
+  c.fillStyle='rgba(255,255,255,.55)';c.font='13px monospace';c.fillText(x.type==='pano'?'R':'PA',12,20);
+}
+
+/* ---------- small renderers ---------- */
+const av=p=>`<span class="av">${esc(initials(p.name))}</span>`;
+const chPill=p=>p.ch==='wa'?`<span class="pill ok">${t('chWa')}</span>`:`<span class="pill info">${t('chApp')}</span>`;
+const stPill=s=>`<span class="pill ${s==='alert'?'danger':s==='followup'?'warn':s==='done'?'ok':'plain'}">${t('pst')[s]}</span>`;
+function flags(p){const f=[];p.allergies.forEach(a=>f.push(`<span class="pill danger">${t('allergy')}: ${L(a)}</span>`));if(p.pregnant)f.push(`<span class="pill violet">${L(p.preg)}</span>`);p.conditions.forEach(c=>f.push(`<span class="pill warn">${L(c)}</span>`));p.current.forEach(m=>{if(/warfarin/i.test(L(m)))f.push(`<span class="pill danger">Warfarin</span>`)});return f.join(' ')||`<span class="muted small">${t('none')}</span>`}
+const pendingCount=()=>INBOX.filter(i=>i.kind==='pending').length;
+const emCount=()=>INBOX.filter(i=>i.kind==='emergency').length;
+
+/* ---------- views ---------- */
+function vToday(){
+  const ap=APPTS.filter(a=>a.d===0).sort((a,b)=>a.t.localeCompare(b.t));
+  const em=INBOX.find(i=>i.kind==='emergency');
+  const fu=PATIENTS.filter(p=>p.status==='followup'||p.status==='alert');
+  const rem=REMINDERS.filter(r=>r.d===0).sort((a,b)=>a.t.localeCompare(b.t)).slice(0,6);
+  return `<p class="muted">${fd(today,{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
+  <h2 style="font-size:1.4em;margin-top:-12px">${t('evening')}</h2>
+  ${em?`<div class="alert danger"><span class="ic">${I.alert}</span><div><b>${t('emergencyNow')}: ${L(P(em.pid).name)}</b><div class="small">${L(em.q)}</div><div class="small muted">${L(em.why)} · ${ago(em.min)}</div></div><a class="btn danger" href="#inbox" data-ibtab="emergency">${t('open')}</a></div>`:''}
+  ${pendingCount()?`<div class="alert warn"><span class="ic">${I.chat}</span><div><b>${t('pendingN')(pendingCount())}</b></div><a class="btn ghost" href="#inbox" data-ibtab="pending">${t('review')}</a></div>`:''}
+  <div class="stats">
+    <div class="stat"><b class="num">47</b><span>${t('sMonth')}</span></div>
+    <div class="stat"><b class="num">${APPTS.filter(a=>a.d>=0&&a.d<7).length}</b><span>${t('sWeek')}</span></div>
+    <div class="stat"><b class="num">${INBOX.filter(i=>i.kind==='auto').length+31}</b><span>${t('sAuto')}</span></div>
+    <div class="stat"><b class="num">${pendingCount()}</b><span>${t('sPending')}</span></div>
+  </div>
+  <div class="grid2">
+    <section class="panel"><div class="panel-h"><h2>${t('schedule')}</h2><a class="btn ghost sm" href="#appointments">${t('all')}</a></div>
+      <div class="sched">${ap.map(a=>{const p=P(a.pid);return `<div class="slot s-${a.st}"><span class="tm num">${ft(a.t)}</span><span class="stripe"></span>
+        <a href="#p-${p.id}" style="color:inherit;text-decoration:none;min-width:0"><b>${L(p.name)}</b><div class="small muted">${L(a.w)} · ${L(DOCS[a.dr])}</div></a>
+        <span class="pill ${a.st==='done'?'ok':a.st==='alert'?'danger':a.st==='wait'?'warn':a.st==='chair'?'info':'plain'}">${t('st')[a.st]}</span></div>`}).join('')}</div>
+    </section>
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+      <section class="panel"><h2 style="font-size:1.02em">${t('followups')}</h2>
+        <div class="list">${fu.map(p=>`<a class="li" href="#p-${p.id}" style="color:inherit;text-decoration:none">${av(p)}<div><b>${L(p.name)}</b><div class="small muted">${L(p.sessions.filter(s=>s.s==='done').slice(-1)[0].t)}</div></div>${stPill(p.status)}</a>`).join('')}</div>
+      </section>
+      <section class="panel"><div class="panel-h"><h2>${t('sentToday')}</h2><a class="btn ghost sm" href="#reminders">${t('all')}</a></div>
+        <div class="list">${rem.map(r=>`<div class="li"><span class="num small muted" style="min-width:58px">${ft(r.t)}</span><div><b class="small">${L(P(r.pid).name)}</b><div class="small muted">${L(r.w)}</div></div><span class="pill ${r.st==='scheduled'?'plain':'ok'}">${t('rst')[r.st]}</span></div>`).join('')}</div>
+      </section>
+    </div>
+  </div>`;
+}
+function patientRows(){
+  const q=A.q.trim().toLowerCase();
+  return PATIENTS.filter(p=>{
+    if(A.filter==='follow'&&p.status!=='followup')return false;
+    if(A.filter==='wa'&&p.ch!=='wa')return false;
+    if(A.filter==='alert'&&p.status!=='alert'&&!p.allergies.length)return false;
+    if(!q)return true;return (p.name.ar+' '+p.name.en+' '+p.phone.replace(/\s/g,'')+' '+p.file).toLowerCase().includes(q.replace(/\s/g,''))||p.name.ar.includes(A.q.trim());
+  }).map(p=>`<tr class="click" data-go="p-${p.id}"><td><div class="who">${av(p)}<div><b>${L(p.name)}</b><span class="small muted">${p.file} · ${t('years')(p.age)}</span></div></div></td>
+    <td class="num"><span class="ltr">${p.phone}</span></td><td>${fd(day(p.last))}</td><td>${flags(p)}</td><td>${chPill(p)}</td><td>${stPill(p.status)}</td></tr>`).join('')||`<tr><td colspan="6" class="muted">${t('empty')}</td></tr>`;
+}
+function vPatients(){
+  const fs=[['all',t('fAll')],['follow',t('fFollow')],['wa',t('fWa')],['alert',t('fAlert')]];
+  return `<section class="panel">
+    <div class="search"><input id="search" class="inp" placeholder="${t('search')}" value="${esc(A.q)}"><button class="btn" data-modal="patient">${t('addPatient')}</button></div>
+    <div class="chips">${fs.map(([k,l])=>`<button class="chip" data-filter="${k}" aria-pressed="${A.filter===k}">${l}</button>`).join('')}</div>
+    <div class="tbl-wrap"><table><thead><tr><th>${t('colName')}</th><th>${t('colPhone')}</th><th>${t('colLast')}</th><th>${t('colFlags')}</th><th>${t('colCh')}</th><th>${t('colStatus')}</th></tr></thead><tbody id="prows">${patientRows()}</tbody></table></div>
+  </section>`;
+}
+function vPatient(id){
+  const p=P(id);if(!p)return `<p>${t('empty')}</p>`;
+  const tabs=Object.entries(t('tabs'));
+  return `<section class="panel">
+    <div class="phead">${av(p)}<div style="min-width:0"><h2>${L(p.name)}</h2><div class="small muted">${t('fileNo')} ${p.file} · ${t('years')(p.age)} · ${p.sex==='m'?t('male'):t('female')} · <span class="ltr">${p.phone}</span></div><div class="flags">${flags(p)} ${chPill(p)}</div></div>
+    <div class="row acts"><button class="btn" data-modal="care">${t('sendCare')}</button><button class="btn ghost" data-modal="med">${t('addMed')}</button><button class="btn ghost" data-modal="appt">${t('book')}</button></div></div>
+    <div class="tabs">${tabs.map(([k,l])=>`<button data-ptab="${k}" aria-current="${A.ptab===k}">${l}</button>`).join('')}</div>
+    <div>${({file:pFile,teeth:pTeeth,xray:pXray,tx:pTx,meds:pMeds,care:pCare,chat:pChat}[A.ptab]||pFile)(p)}</div>
+  </section>`;
+}
+function pFile(p){
+  const list=a=>a.length?a.map(L).join('، '):t('none');
+  return `<div style="display:flex;flex-direction:column;gap:18px"><dl class="kv">
+    <div><dt>${t('phone')}</dt><dd class="ltr" style="text-align:start">${p.phone}</dd></div><div><dt>${t('age')}</dt><dd>${t('years')(p.age)}</dd></div><div><dt>${t('blood')}</dt><dd>${p.blood}</dd></div><div><dt>${t('ec')}</dt><dd>${L(p.ec)}</dd></div>
+    <div><dt>${t('cond')}</dt><dd>${list(p.conditions)}</dd></div><div><dt>${t('allergy')}</dt><dd>${p.allergies.length?`<span class="pill danger">${list(p.allergies)}</span>`:t('none')}</dd></div><div><dt>${t('curMeds')}</dt><dd>${list(p.current)}</dd></div>${p.pregnant?`<div><dt>${t('preg')}</dt><dd><span class="pill violet">${L(p.preg)}</span></dd></div>`:''}
+  </dl>
+  <label class="f">${t('notes')}<textarea id="notes">${esc(L(p.notes))}</textarea></label>
+  <div><button class="btn" data-act="saveNotes" data-id="${p.id}">${t('saveNotes')}</button></div></div>`;
+}
+function pTeeth(p){
+  const up=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],lo=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+  const cell=n=>{const s=p.teeth[n]||'healthy';return `<button class="tooth st-${s}" data-tooth="${n}" title="${t('toothN')(n)}: ${L(TOOTH[s])}">${toothSvg}<span class="num">${n}</span></button>`};
+  const cols={caries:'var(--danger-soft)',filling:'var(--accent-soft)',rct:'var(--warn-soft)',crown:'var(--violet-soft)',implant:'var(--ok-soft)',extracted:'var(--sunk)',planned:'transparent',healthy:'var(--surface)'};
+  return `<div style="display:flex;flex-direction:column;gap:14px"><p class="small muted">${t('teethHelp')}</p>
+  <div class="chart-wrap"><div class="chart"><span class="lab">${t('upperR')}</span><span class="lab">${t('upperL')}</span>${up.map(cell).join('')}<div class="mid"></div>${lo.map(cell).join('')}<span class="lab">${t('lowerR')}</span><span class="lab">${t('lowerL')}</span></div></div>
+  <div class="legend">${Object.keys(TOOTH).map(k=>`<span><i style="background:${cols[k]};${k==='planned'?'border:2px dashed var(--warn)':''}"></i>${L(TOOTH[k])}</span>`).join('')}</div></div>`;
+}
+function pXray(p){
+  return `<div class="xgrid">${p.xrays.map((x,i)=>`<figure class="xray">${x.img?`<img src="${x.img}" alt="">`:`<canvas data-xp="${p.id}" data-xi="${i}" width="640" height="360"></canvas>`}
+    <figcaption><b>${L(x.note)}</b><span class="muted">${fd(day(x.d))} · ${x.type==='pano'?'Panoramic':x.type==='pa'?'Periapical':'Photo'}</span><span class="pill ${i===0?'info':'plain'}" style="align-self:flex-start">${i===0||x.img?t('visible'):t('hidden')}</span></figcaption></figure>`).join('')}
+    <label class="drop"><input type="file" accept="image/*" id="xup" data-id="${p.id}"><div><b>${t('uploadX')}</b><div class="small">${t('uploadHint')}</div></div></label></div>`;
+}
+function pTx(p){
+  return `<div class="list">${p.sessions.map(s=>`<div class="li"><span class="dotc ${s.s==='done'?'ok':s.s==='next'?'next':'plan'}"></span><div><b>${L(s.t)}</b><div class="small muted">${s.d!=null?fd(day(s.d)):''} ${s.dr?'· '+L(DOCS[s.dr]):''}</div></div><span class="pill ${s.s==='done'?'ok':s.s==='next'?'info':'warn'}">${s.s==='done'?t('sDone'):s.s==='next'?t('sNext'):t('sPlan')}</span></div>`).join('')}</div>
+  <div style="margin-top:12px"><button class="btn ghost" data-modal="session">${t('addSession')}</button></div>`;
+}
+function pMeds(p){
+  if(!p.meds.length)return `<p class="muted">${t('noMeds')}</p>`;
+  return `<div class="list">${p.meds.map(m=>{const d=-m.start;return `<div class="li"><span class="dotc ${m.prn?'plan':'next'}"></span><div><b class="ltr">${esc(m.name)}</b><div class="small">${L(m.how)}</div>${m.times.length?`<div class="small muted">${t('times')}: ${m.times.map(ft).join('، ')}</div>`:''}</div><span class="pill ${m.prn?'warn':'info'}">${m.prn?t('prn'):t('dayOf')(Math.max(1,Math.min(d+1,m.days)),m.days)}</span></div>`}).join('')}</div>`;
+}
+function pCare(p){
+  const rs=REMINDERS.filter(r=>r.pid===p.id).sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));
+  return `<div style="display:flex;flex-direction:column;gap:18px">
+  <div class="row"><b>${t('channel')}:</b><button class="chip" data-ch="app" aria-pressed="${p.ch==='app'}">${t('chApp')}</button><button class="chip" data-ch="wa" aria-pressed="${p.ch==='wa'}">${t('chWa')}</button></div>
+  <div><h3 style="font-size:.98em;margin-bottom:6px">${t('sentTpl')}</h3><div class="row">${p.sent.length?p.sent.map(k=>`<span class="pill info">${L(TEMPLATES[k].t)}</span>`).join(''):`<span class="muted">${t('none')}</span>`}</div></div>
+  <div><h3 style="font-size:.98em;margin-bottom:6px">${t('schedRem')}</h3>${rs.length?`<div class="list">${rs.map(r=>`<div class="li"><span class="small muted num" style="min-width:90px">${fd(day(r.d),{day:'numeric',month:'short'})} · ${ft(r.t)}</span><div>${L(r.w)}<div class="small muted">${r.ch.map(c=>c==='wa'?t('viaWa'):t('viaApp')).join(' + ')}</div></div><span class="pill ${r.st==='scheduled'?'plain':'ok'}">${t('rst')[r.st]}</span></div>`).join('')}</div>`:`<p class="muted">${t('none')}</p>`}</div></div>`;
+}
+function pChat(p){
+  const items=INBOX.filter(i=>i.pid===p.id);
+  if(!items.length)return `<p class="muted">${t('noChat')}</p>`;
+  return `<div class="convo">${items.slice().reverse().map(i=>`<div class="m p">${esc(L(i.q))}<div class="meta">${ago(i.min)} · ${i.ch==='wa'?t('viaWa'):t('viaApp')}</div></div>${i.kind==='auto'?`<div class="m a">${esc(L(i.a))}<div class="meta">${t('ibAuto')}</div></div>`:i.kind==='emergency'?`<div class="m a" style="background:var(--danger-soft)">${esc(L(i.sent))}</div>`:`<div class="m a" style="background:var(--warn-soft)">${t('ibPending')}<div class="meta"><a href="#inbox">${t('review')}</a></div></div>`}`).join('')}</div>`;
+}
+function vAppts(){
+  const days=[0,1,2,3,4,5,6,7];
+  return `<div class="row between"><p class="muted">${fd(today)} – ${fd(day(7))}</p><button class="btn" data-modal="appt">${t('newAppt')}</button></div>`+
+  days.map(d=>{const ap=APPTS.filter(a=>a.d===d).sort((a,b)=>a.t.localeCompare(b.t));if(!ap.length)return '';
+    return `<section class="panel"><h2 style="font-size:1em">${fd(day(d),{weekday:'long',day:'numeric',month:'long'})} ${d===0?`<span class="pill info">${t('today')}</span>`:''}</h2>
+    <div class="sched">${ap.map(a=>{const p=P(a.pid);return `<div class="slot s-${a.st}"><span class="tm num">${ft(a.t)}</span><span class="stripe"></span><a href="#p-${p.id}" style="color:inherit;text-decoration:none"><b>${L(p.name)}</b><div class="small muted">${L(a.w)} · ${L(DOCS[a.dr])}</div></a><span class="pill ${a.st==='done'?'ok':a.st==='alert'?'danger':a.st==='wait'?'warn':a.st==='chair'?'info':'plain'}">${t('st')[a.st]}</span></div>`}).join('')}</div></section>`}).join('');
+}
+function vInbox(){
+  const tabs=[['pending',t('ibPending'),pendingCount()],['emergency',t('ibEm'),emCount()],['auto',t('ibAuto'),INBOX.filter(i=>i.kind==='auto').length]];
+  const items=INBOX.filter(i=>i.kind===A.inboxTab);
+  return `<div class="chips">${tabs.map(([k,l,n])=>`<button class="chip" data-ibtab="${k}" aria-pressed="${A.inboxTab===k}">${l} <span class="num">(${n})</span></button>`).join('')}</div>
+  ${items.length?items.map(i=>{const p=P(i.pid);return `<article class="q ${i.kind}">
+    <div class="row between"><a href="#p-${p.id}" class="who" style="color:inherit;text-decoration:none">${av(p)}<div><b>${L(p.name)}</b><span class="small muted">${ago(i.min)} · ${i.ch==='wa'?t('viaWa'):t('viaApp')} · <span class="ltr">${p.phone}</span></span></div></a>${i.kind!=='auto'?`<span class="why">${t('why')}: ${L(i.why)}</span>`:''}</div>
+    <div class="bubble">${esc(L(i.q))}</div>
+    ${i.kind==='pending'?`<label class="f">${t('draft')}<textarea id="draft-${i.id}">${esc(L(i.draft))}</textarea></label><div class="row"><button class="btn" data-approve="${i.id}">${t('approve')}</button></div>`:''}
+    ${i.kind==='emergency'?`<p class="small">${L(i.sent)}</p><div class="row"><span class="btn ghost ltr" style="user-select:all">${p.phone}</span><button class="btn danger" data-handled="${i.id}">${t('called')}</button></div>`:''}
+    ${i.kind==='auto'?`<div class="bubble" style="background:var(--accent-soft)">${esc(L(i.a))}</div><p class="small muted">${t('src')}: ${L(i.src)}. ${t('autoNote')}</p>`:''}
+  </article>`}).join(''):`<p class="muted">${t('empty')}</p>`}`;
+}
+function vReminders(){
+  const rs=REMINDERS.slice().sort((a,b)=>a.d-b.d||a.t.localeCompare(b.t));const c=t('remCols');
+  return `<section class="panel"><div class="tbl-wrap"><table><thead><tr>${c.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>
+    ${rs.map(r=>`<tr class="click" data-go="p-${r.pid}"><td class="num">${fd(day(r.d),{day:'numeric',month:'short'})} · ${ft(r.t)}</td><td>${L(P(r.pid).name)}</td><td>${L(r.w)}</td><td>${r.ch.map(x=>`<span class="pill ${x==='wa'?'ok':'info'}">${x==='wa'?t('viaWa'):t('viaApp')}</span>`).join(' ')}</td><td><span class="pill ${r.st==='scheduled'?'plain':'ok'}">${t('rst')[r.st]}</span></td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section class="panel"><h2 style="font-size:1em">${t('remRules')}</h2><ul style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px">${['remRule1','remRule2','remRule3','remRule4'].map(k=>`<li>${t(k)}</li>`).join('')}</ul></section>`;
+}
+function vTemplates(){
+  const cur=TEMPLATES[A.tpl]||Object.values(TEMPLATES)[0];
+  return `<div class="tpl"><section class="panel tpl-list" style="padding:8px">${Object.entries(TEMPLATES).map(([k,v])=>`<button data-tpl="${k}" aria-current="${A.tpl===k}">${L(v.t)}</button>`).join('')}<button data-act="newTpl" style="color:var(--accent);font-weight:600">+ ${t('newTpl')}</button></section>
+  <section class="panel"><label class="f">${t('tplTitle')}<input class="inp" id="tplT" value="${esc(L(cur.t))}"></label><label class="f">${t('tplBody')}<textarea id="tplB" style="min-height:260px">${esc(L(cur.body))}</textarea></label><div><button class="btn" data-act="saveTpl">${t('saveTpl')}</button></div></section></div>`;
+}
+function vTeam(){
+  return `<section class="panel"><div class="panel-h"><p class="small muted">${t('permNote')}</p><button class="btn" data-modal="member">${t('addMember')}</button></div>
+  <div class="tbl-wrap"><table class="matrix" style="min-width:860px"><thead><tr><th>${t('colName')}</th><th>${t('role')}</th>${PERMS.map(([k,l])=>`<th>${L(l)}</th>`).join('')}</tr></thead><tbody>
+  ${TEAM.map(m=>`<tr><td><div class="who"><span class="av">${esc(initials(m.name))}</span><div><b>${L(m.name)}</b><span class="small muted ltr">${m.phone}</span></div></div></td>
+    <td>${m.role==='owner'?`<span class="pill info">${t('owner')}</span>`:`<select data-role="${m.id}" class="inp" style="width:auto">${Object.keys(ROLES).filter(r=>r!=='owner').map(r=>`<option value="${r}" ${m.role===r?'selected':''}>${L(ROLES[r])}</option>`).join('')}</select>`}</td>
+    ${PERMS.map(([k])=>`<td><input type="checkbox" data-perm="${m.id}|${k}" ${m.p[k]?'checked':''} ${m.role==='owner'?'disabled':''} aria-label="${k}"></td>`).join('')}</tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+function vClinic(){
+  const link=PATIENT_APP_URL||'—';
+  return `<div class="grid2"><section class="panel"><h2 style="font-size:1.02em">${t('clinicInfo')}</h2><div class="form">
+    <label class="f full">${t('name')}<input class="inp" id="cName" value="${esc(L(CLINIC.name))}"></label>
+    <label class="f full">${t('address')}<input class="inp" id="cAddr" value="${esc(L(CLINIC.address))}"></label>
+    <label class="f">${t('phone')}<input class="inp ltr" id="cPhone" value="${CLINIC.phone}"></label>
+    <label class="f">${t('waNum')}<input class="inp ltr" id="cWa" value="${CLINIC.wa}"></label>
+    <label class="f full">${t('hours')}<input class="inp" id="cHours" value="${esc(L(CLINIC.hours))}"></label></div>
+    <div><button class="btn" data-act="saveClinic">${t('saveClinic')}</button></div></section>
+  <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+  <section class="panel"><h2 style="font-size:1.02em">${t('aiT')}</h2>
+    <label class="check"><input type="checkbox" id="aiAuto" ${AI.auto?'checked':''}>${t('aiAuto')}</label>
+    <div><b class="small">${t('aiAsk')}</b><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;padding-inline-start:4px">
+    ${[['dose','rDose'],['symptom','rSym'],['preg','rPreg'],['unknown','rUnk'],['price','rPrice']].map(([k,l])=>`<label class="check"><input type="checkbox" data-rule="${k}" ${AI.rules[k]?'checked':''}>${t(l)}</label>`).join('')}</div></div>
+    <label class="check"><input type="checkbox" checked disabled>${t('aiEm')}</label></section>
+  <section class="panel"><h2 style="font-size:1.02em">${t('patientLink')}</h2><div class="linkbox"><code id="plink">${esc(link)}</code><button class="btn ghost" data-act="copyLink">${t('copy')}</button></div><p class="small muted">${t('linkHint')}</p>${PATIENT_APP_URL?`<a class="btn" style="align-self:flex-start;text-decoration:none" href="${PATIENT_APP_URL}" target="_blank" rel="noopener">${t('open')}</a>`:''}</section>
+  </div></div>`;
+}
+
+/* ---------- modals ---------- */
+function curPid(){const m=location.hash.match(/^#p-(\d+)/);return m?+m[1]:null}
+function medWarnings(p,name){
+  const n=(name||'').toLowerCase(),w=[];
+  if(p.allergies.some(a=>/بنسلين|penicillin/i.test(L(a)))&&/amox|augment|penicil|ampic|أموك|اموك|اوجمنت|أوجمنت|بنسلين/.test(n))w.push(t('wPen'));
+  if(p.pregnant&&/ibu|brufen|بروفين|ibupro|aspirin|اسبرين|أسبرين|diclo|ديكلو|naproxen|tetracyc|doxy/.test(n))w.push(t('wPreg'));
+  if(p.current.some(m=>/warfarin/i.test(L(m)))&&/ibu|brufen|بروفين|aspirin|اسبرين|أسبرين|diclo|ديكلو|naproxen|metronid|ميترو/.test(n))w.push(t('wWarf'));
+  return w;
+}
+function warnHtml(w){return w.length?`<div class="warnbox"><b>${t('warnT')}</b>${w.map(x=>`<span>${x}</span>`).join('')}<label class="check"><input type="checkbox" id="warnOk">${t('confirmWarn')}</label></div>`:''}
+function vModal(){
+  const m=A.modal;if(!m)return '';const p=P(curPid());let body='';
+  if(m==='patient')body=`<h2>${t('addPatient')}</h2><form id="mf" class="form">
+    <label class="f full">${t('fullName')}<input class="inp" id="m-name" required></label>
+    <label class="f">${t('phone')}<input class="inp ltr" id="m-phone" inputmode="tel" required placeholder="07xx xxx xxxx"></label>
+    <label class="f">${t('age')}<input class="inp" id="m-age" type="number" min="0" max="120" required></label>
+    <label class="f">${t('sex')}<select id="m-sex"><option value="m">${t('male')}</option><option value="f">${t('female')}</option></select></label>
+    <label class="f">${t('channel')}<select id="m-ch"><option value="app">${t('chApp')}</option><option value="wa">${t('chWa')}</option></select></label>
+    <label class="f full">${t('cond')}<span class="h">${t('condH')}</span><input class="inp" id="m-cond"></label>
+    <label class="f full">${t('allergy')}<span class="h">${t('condH')}</span><input class="inp" id="m-all"></label>
+    <div class="row full"><button class="btn" type="submit">${t('add')}</button><button class="btn ghost" type="button" data-close>${t('cancel')}</button></div></form>`;
+  if(m==='med'&&p)body=`<h2>${t('addMed')} · ${L(p.name)}</h2><div class="flags">${flags(p)}</div><form id="mf" class="form">
+    <label class="f full">${t('medName')}<input class="inp ltr" id="m-med" list="medlist" required placeholder="Amoxicillin 500 mg"><datalist id="medlist"><option>Amoxicillin 500 mg</option><option>Augmentin 625 mg</option><option>Clindamycin 300 mg</option><option>Metronidazole 500 mg</option><option>Ibuprofen 400 mg</option><option>Paracetamol 500 mg</option><option>Chlorhexidine 0.12%</option></datalist></label>
+    <div id="mwarn" class="full"></div>
+    <label class="f full">${t('dose')}<input class="inp" id="m-how" required></label>
+    <label class="f">${t('perDay')}<select id="m-n"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label>
+    <label class="f">${t('days')}<input class="inp" id="m-days" type="number" min="1" value="5"></label>
+    <label class="check full"><input type="checkbox" id="m-prn">${t('isPrn')}</label>
+    <div class="row full"><button class="btn" type="submit">${t('add')}</button><button class="btn ghost" type="button" data-close>${t('cancel')}</button></div></form>`;
+  if(m==='care'&&p){const k=A.careTpl||'extraction';body=`<h2>${t('sendCare')} · ${L(p.name)}</h2><form id="mf" class="form">
+    <label class="f full">${t('chooseTpl')}<select id="m-tpl">${Object.entries(TEMPLATES).map(([kk,v])=>`<option value="${kk}" ${kk===k?'selected':''}>${L(v.t)}</option>`).join('')}</select></label>
+    <div class="full"><b class="small">${t('preview')}</b><div id="tplprev" class="q" style="margin-top:6px;white-space:pre-line">${esc(L(TEMPLATES[k].body))}</div></div>
+    <div class="full row"><b class="small">${t('sendBy')}:</b><label class="check"><input type="checkbox" id="m-app" ${p.ch==='app'?'checked':''} ${p.ch==='wa'?'disabled':''}>${t('viaApp')}</label><label class="check"><input type="checkbox" id="m-wa" checked>${t('viaWa')}</label></div>
+    <div class="row full"><button class="btn" type="submit">${t('send')}</button><button class="btn ghost" type="button" data-close>${t('cancel')}</button></div></form>`}
+  if(m==='appt'){const pid=p?p.id:1;body=`<h2>${t('newAppt')}</h2><form id="mf" class="form">
+    <label class="f full">${t('colName')}<select id="m-pid">${PATIENTS.map(x=>`<option value="${x.id}" ${x.id===pid?'selected':''}>${L(x.name)}</option>`).join('')}</select></label>
+    <label class="f">${t('date')}<input class="inp" type="date" id="m-date" required value="${day(1).toISOString().slice(0,10)}"></label>
+    <label class="f">${t('time')}<input class="inp" type="time" id="m-time" required value="17:00"></label>
+    <label class="f">${t('what')}<input class="inp" id="m-what" required></label>
+    <label class="f">${t('doctor')}<select id="m-dr"><option value="mk">${L(DOCS.mk)}</option><option value="sn">${L(DOCS.sn)}</option></select></label>
+    <label class="check full"><input type="checkbox" id="m-rem" checked>${t('remind')}</label>
+    <div class="row full"><button class="btn" type="submit">${t('add')}</button><button class="btn ghost" type="button" data-close>${t('cancel')}</button></div></form>`}
+  if(m==='session'&&p)body=`<h2>${t('addSession')}</h2><form id="mf" class="form">
+    <label class="f full">${t('sessWhat')}<input class="inp" id="m-sw" required></label>
+    <label class="f">${t('sessStatus')}<select id="m-ss"><option value="done">${t('sDone')}</option><option value="next">${t('sNext')}</option><option value="plan">${t('sPlan')}</option></select></label>
+    <label class="f">${t('doctor')}<select id="m-dr"><option value="mk">${L(DOCS.mk)}</option><option value="sn">${L(DOCS.sn)}</option></select></label>
+    <div class="row full"><button class="btn" type="submit">${t('add')}</button><button class="btn ghost" type="button" data-close>${t('cancel')}</button></div></form>`;
+  if(m==='member')body=`<h2>${t('addMember')}</h2><form id="mf" class="form">
+    <label class="f full">${t('fullName')}<input class="inp" id="m-name" required></label>
+    <label class="f">${t('phone')}<input class="inp ltr" id="m-phone" required></label>
+    <label class="f">${t('role')}<select id="m-role">${Object.keys(ROLES).filter(r=>r!=='owner').map(r=>`<option value="${r}">${L(ROLES[r])}</option>`).join('')}</select></label>
+    <div class="row full"><button class="btn" type="submit">${t('add')}</button><button class="btn ghost" type="button" data-close>${t('cancel')}</button></div></form>`;
+  if(m.startsWith&&m.startsWith('tooth:')&&p){const n=+m.split(':')[1];const s=p.teeth[n]||'healthy';body=`<h2>${t('toothN')(n)} · ${L(p.name)}</h2><form id="mf" class="form">
+    <div class="full chips">${Object.keys(TOOTH).map(k=>`<label class="chip" style="display:flex;gap:6px;align-items:center"><input type="radio" name="ts" value="${k}" ${k===s?'checked':''}>${L(TOOTH[k])}</label>`).join('')}</div>
+    <label class="f full">${t('toothNote')}<input class="inp" id="m-tn"></label>
+    <div class="row full"><button class="btn" type="submit">${t('saveTooth')}</button><button class="btn ghost" type="button" data-close>${t('cancel')}</button></div></form>`}
+  return `<div class="ov" data-close><div class="modal" role="dialog" aria-modal="true">${body}</div></div>`;
+}
+
+/* ---------- shell ---------- */
+const NAV=[['today',I.today],['patients',I.users],['appointments',I.cal],['inbox',I.chat],['reminders',I.bell],['templates',I.doc],['team',I.shield],['clinic',I.gear]];
+function route(){const h=(location.hash||'#today').slice(1);return h||'today'}
+const root=document.getElementById('root');
+function render(){
+  document.documentElement.lang=A.lang;document.documentElement.dir=A.lang==='ar'?'rtl':'ltr';
+  const r=route();const pid=curPid();const sec=pid?'patients':r;
+  const title=pid?t('patient'):t(r)||t('today');
+  const view=pid?vPatient(pid):({today:vToday,patients:vPatients,appointments:vAppts,inbox:vInbox,reminders:vReminders,templates:vTemplates,team:vTeam,clinic:vClinic}[r]||vToday)();
+  root.innerHTML=`<div class="app"><aside class="rail">
+    <div class="brand"><span class="mark">${I.tooth}</span><div><b>${L(CLINIC.name)}</b><small>${A.lang==='ar'?'الأعظمية، بغداد':'Al-Adhamiya, Baghdad'}</small></div></div>
+    <nav>${NAV.map(([k,ic])=>`<a href="#${k}" ${sec===k?'aria-current="page"':''}>${ic}<span>${t(k)}</span>${k==='inbox'&&(pendingCount()+emCount())?`<span class="cnt num">${pendingCount()+emCount()}</span>`:''}</a>`).join('')}</nav>
+    <div class="foot"><div class="me"><span class="av">مك</span><div><b style="color:#fff">${L(DOCS.mk)}</b><div>${t('owner')}</div></div></div><button data-act="lang">${t('lang')}</button></div>
+  </aside><div class="work"><header class="bar">${pid?`<a href="#patients" class="icon-btn" style="display:grid;place-items:center;text-decoration:none;color:inherit" aria-label="${t('patients')}">${A.lang==='ar'?'→':'←'}</a>`:''}<h1>${title}</h1><span class="demo">${t('demo')}</span><button class="icon-btn" data-act="lang">${A.lang==='ar'?'EN':'ع'}</button></header>
+  <div class="content">${view}</div></div></div>${vModal()}`;
+  root.querySelectorAll('canvas[data-xp]').forEach(cv=>{const p=P(+cv.dataset.xp);drawXray(cv,p.xrays[+cv.dataset.xi],p.teeth)});
+}
+function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),1900)}
+const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+const split=s=>s?s.split(/[,،]/).map(x=>x.trim()).filter(Boolean).map(x=>({ar:x,en:x})):[];
+
+window.addEventListener('hashchange',()=>{A.modal=null;if(curPid()==null)A.ptab='file';render();window.scrollTo(0,0)});
+root.addEventListener('click',e=>{
+  const el=e.target.closest('[data-go],[data-filter],[data-ptab],[data-modal],[data-close],[data-act],[data-tooth],[data-ibtab],[data-approve],[data-handled],[data-tpl],[data-ch]');if(!el)return;
+  const d=el.dataset;
+  if(el.classList.contains('ov')&&e.target!==el)return;
+  if(d.ibtab){A.inboxTab=d.ibtab;if(el.tagName!=='A'){render()}return}
+  if(d.go){location.hash=d.go;return}
+  if(d.filter){A.filter=d.filter;render();return}
+  if(d.ptab){A.ptab=d.ptab;render();return}
+  if(d.modal){A.modal=d.modal;A.careTpl=null;render();const f=document.querySelector('.modal input,.modal select');f&&f.focus();return}
+  if('close' in d){A.modal=null;render();return}
+  if(d.tooth){A.modal='tooth:'+d.tooth;render();return}
+  if(d.tpl){A.tpl=d.tpl;render();return}
+  if(d.ch){const p=P(curPid());p.ch=d.ch;render();toast(t('saved'));return}
+  if(d.approve){const i=INBOX.find(x=>x.id===+d.approve);const txt=val('draft-'+i.id);i.kind='auto';i.a={ar:txt,en:txt};i.src={ar:'رد الطبيب',en:"Doctor's reply"};render();toast(t('answered'));return}
+  if(d.handled){INBOX=INBOX.filter(x=>x.id!==+d.handled);const a=APPTS.find(x=>x.pid===4&&x.d===0);if(a)a.st='wait';render();toast(t('saved'));return}
+  const a=d.act;
+  if(a==='lang'){A.lang=A.lang==='ar'?'en':'ar';save();render()}
+  else if(a==='saveNotes'){const p=P(+d.id);const v=val('notes');p.notes={ar:v,en:v};toast(t('saved'))}
+  else if(a==='saveTpl'){const c=TEMPLATES[A.tpl];c.t={...c.t,[A.lang]:val('tplT')};c.body={...c.body,[A.lang]:document.getElementById('tplB').value};render();toast(t('saved'))}
+  else if(a==='newTpl'){const k='t'+(uid++);TEMPLATES[k]={t:{ar:'نموذج جديد',en:'New template'},body:{ar:'',en:''}};A.tpl=k;render()}
+  else if(a==='saveClinic'){CLINIC.name={...CLINIC.name,[A.lang]:val('cName')};CLINIC.address={...CLINIC.address,[A.lang]:val('cAddr')};CLINIC.phone=val('cPhone');CLINIC.wa=val('cWa');CLINIC.hours={...CLINIC.hours,[A.lang]:val('cHours')};render();toast(t('saved'))}
+  else if(a==='copyLink'){const s=PATIENT_APP_URL;if(!s)return;try{navigator.clipboard.writeText(s).then(()=>toast(t('copied')),()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('plink'));getSelection().removeAllRanges();getSelection().addRange(r)})}catch(err){}}
+});
+root.addEventListener('input',e=>{
+  if(e.target.id==='search'){A.q=e.target.value;document.getElementById('prows').innerHTML=patientRows()}
+  if(e.target.id==='m-med'){const p=P(curPid());document.getElementById('mwarn').innerHTML=warnHtml(medWarnings(p,e.target.value))}
+});
+root.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.id==='m-tpl'){A.careTpl=el.value;document.getElementById('tplprev').textContent=L(TEMPLATES[el.value].body)}
+  if(el.dataset.perm){const [id,k]=el.dataset.perm.split('|');TEAM.find(m=>m.id===+id).p[k]=el.checked?1:0;toast(t('saved'))}
+  if(el.dataset.role){const m=TEAM.find(x=>x.id===+el.dataset.role);m.role=el.value;m.p={...PRESET[el.value]};render();toast(t('saved'))}
+  if(el.dataset.rule){AI.rules[el.dataset.rule]=el.checked;toast(t('saved'))}
+  if(el.id==='aiAuto'){AI.auto=el.checked;toast(t('saved'))}
+  if(el.id==='xup'&&el.files[0]){const p=P(+el.dataset.id);const fr=new FileReader();fr.onload=()=>{p.xrays.unshift({type:'photo',d:0,img:fr.result,note:{ar:'مرفوعة اليوم',en:'Uploaded today'}});render();toast(t('added'))};fr.readAsDataURL(el.files[0])}
+});
+root.addEventListener('submit',e=>{
+  e.preventDefault();const m=A.modal;const p=P(curPid());
+  if(m==='patient'){const id=uid++;const name=val('m-name');PATIENTS.unshift({id,name:{ar:name,en:name},sex:val('m-sex'),age:+val('m-age'),phone:val('m-phone'),ch:val('m-ch'),blood:'—',file:'MK-0'+(157+id-100),status:'active',last:0,conditions:split(val('m-cond')),allergies:split(val('m-all')),pregnant:false,current:[],ec:'—',notes:{ar:'',en:''},teeth:{},xrays:[],sessions:[],meds:[],sent:[]});A.modal=null;toast(t('added'));location.hash='p-'+id;render();return}
+  if(m==='med'){const name=val('m-med');const w=medWarnings(p,name);if(w.length&&!document.getElementById('warnOk')?.checked){document.getElementById('mwarn').innerHTML=warnHtml(w);document.getElementById('mwarn').scrollIntoView({block:'center'});return}
+    const prn=document.getElementById('m-prn').checked;const n=+val('m-n');const tm={1:['09:00'],2:['09:00','21:00'],3:['07:00','15:00','23:00'],4:['08:00','14:00','20:00','02:00']}[n];
+    p.meds.push({name,how:{ar:val('m-how'),en:val('m-how')},times:prn?[]:tm,prn,days:+val('m-days')||1,start:0});
+    if(!prn)tm.forEach(x=>{if(x>='16:00')REMINDERS.push({pid:p.id,d:0,t:x,w:{ar:name,en:name},ch:p.ch==='wa'?['wa']:['app','wa'],st:'scheduled'})});
+    A.modal=null;A.ptab='meds';render();toast(t('added'));return}
+  if(m==='care'){const k=val('m-tpl');if(!p.sent.includes(k))p.sent.push(k);const ch=[];if(document.getElementById('m-app')?.checked)ch.push('app');if(document.getElementById('m-wa').checked)ch.push('wa');
+    REMINDERS.push({pid:p.id,d:0,t:`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,w:TEMPLATES[k].t,ch:ch.length?ch:['wa'],st:'sent'});A.modal=null;A.ptab='care';render();toast(t('sent'));return}
+  if(m==='appt'){const pid=+val('m-pid');const dd=new Date(val('m-date'));dd.setHours(0,0,0,0);const off=Math.round((dd-today)/864e5);const w=val('m-what');
+    APPTS.push({id:uid++,pid,d:off,t:val('m-time'),w:{ar:w,en:w},dr:val('m-dr'),st:'booked'});
+    if(document.getElementById('m-rem').checked)REMINDERS.push({pid,d:off-1,t:'18:00',w:{ar:`تذكير بموعد: ${w}`,en:`Appointment reminder: ${w}`},ch:P(pid).ch==='wa'?['wa']:['app','wa'],st:'scheduled'});
+    P(pid).sessions.push({d:off,s:'next',t:{ar:w,en:w},dr:val('m-dr')});A.modal=null;render();toast(t('added'));return}
+  if(m==='session'){const w=val('m-sw');p.sessions.push({d:val('m-ss')==='plan'?null:0,s:val('m-ss'),t:{ar:w,en:w},dr:val('m-dr')});A.modal=null;render();toast(t('added'));return}
+  if(m==='member'){const r=val('m-role');const nm=val('m-name');TEAM.push({id:uid++,name:{ar:nm,en:nm},phone:val('m-phone'),role:r,p:{...PRESET[r]}});A.modal=null;render();toast(t('added'));return}
+  if(m&&m.startsWith('tooth:')){const n=+m.split(':')[1];const s=document.querySelector('input[name="ts"]:checked').value;if(s==='healthy')delete p.teeth[n];else p.teeth[n]=s;A.modal=null;render();toast(t('saved'));return}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&A.modal){A.modal=null;render()}});
+render();
+})();
+</script>

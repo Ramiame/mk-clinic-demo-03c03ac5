@@ -1,0 +1,557 @@
+<title>تطبيق مرضى د. مصطفى كمال</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&display=swap">
+<style>
+/* Layout: one phone-width column, sticky header, bottom tab bar; cards only for things the patient acts on */
+:root{
+  --bg:#EAF1F1; --surface:#FFFFFF; --sunk:#F3F7F7; --ink:#12262D; --muted:#586C73; --line:#D6E1E2;
+  --accent:#0C6F7B; --accent-ink:#FFFFFF; --accent-soft:#D9EDEF;
+  --ok:#2B7A4B; --ok-soft:#DFF1E5; --warn:#9A5F0C; --warn-soft:#FAEDD6; --danger:#B0341A; --danger-soft:#FAE2DB;
+  --display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --fs:15px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C1619; --surface:#132227; --sunk:#0F1C20; --ink:#E3EEF0; --muted:#93A8AE; --line:#24373D;
+  --accent:#4FB7C3; --accent-ink:#06282D; --accent-soft:#16363C;
+  --ok:#6CC892; --ok-soft:#163327; --warn:#E3AA55; --warn-soft:#3A2B12; --danger:#F08A70; --danger-soft:#3C1C14; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0C1619; --surface:#132227; --sunk:#0F1C20; --ink:#E3EEF0; --muted:#93A8AE; --line:#24373D;
+  --accent:#4FB7C3; --accent-ink:#06282D; --accent-soft:#16363C;
+  --ok:#6CC892; --ok-soft:#163327; --warn:#E3AA55; --warn-soft:#3A2B12; --danger:#F08A70; --danger-soft:#3C1C14; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:var(--fs);line-height:1.65}
+body.big{--fs:18px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);line-height:1.3;margin:0;text-wrap:balance}
+p{margin:0}
+.shell{max-width:460px;margin:0 auto;min-height:100%;background:var(--bg);display:flex;flex-direction:column;position:relative}
+@media (min-width:520px){.shell{border-inline:1px solid var(--line);box-shadow:0 0 0 1px var(--line)}}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.mark{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.brand b{font-family:var(--display);font-weight:600;font-size:.95em;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{color:var(--muted);font-size:.78em;display:block}
+.icon-btn{border:1px solid var(--line);background:var(--sunk);border-radius:10px;height:36px;min-width:36px;padding:0 8px;display:grid;place-items:center;position:relative;font-weight:600;font-size:.82em}
+.dot{position:absolute;top:-3px;inset-inline-end:-3px;background:var(--danger);color:#fff;font-size:10px;border-radius:99px;min-width:16px;height:16px;display:grid;place-items:center;padding:0 4px}
+
+main{flex:1;padding-block:16px 96px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+
+/* bottom nav */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs .in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tabs button{border:0;background:none;padding:8px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font-size:.74em;font-weight:500}
+.tabs button[aria-current="page"]{color:var(--accent)}
+.tabs button[aria-current="page"] svg{background:var(--accent-soft);border-radius:99px}
+.tabs svg{width:44px;height:26px;padding:3px 10px}
+
+/* common */
+.eyebrow{font-size:.75em;letter-spacing:.04em;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:.85em}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:2px 10px;font-size:.78em;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.danger{background:var(--danger-soft);color:var(--danger)}
+.pill.info{background:var(--accent-soft);color:var(--accent)}
+.btn{border:0;border-radius:12px;padding:12px 16px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-family:var(--display)}
+.btn.ghost{background:var(--sunk);color:var(--ink);border:1px solid var(--line)}
+.btn.block{width:100%}
+.section-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.section-title h2{font-size:1.05em}
+.section-title button{border:0;background:none;color:var(--accent);font-weight:600;font-size:.85em}
+.num{font-variant-numeric:tabular-nums}
+.demo-flag{font-size:.72em;color:var(--warn);background:var(--warn-soft);text-align:center;padding:4px 16px}
+
+/* login */
+.login{flex:1;display:flex;flex-direction:column;justify-content:center;gap:22px;padding-block:32px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.login .mark{width:56px;height:56px;border-radius:16px}
+.login h1{font-size:1.6em}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:.9em}
+.field input{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:1.05em;direction:ltr;text-align:start}
+[dir="rtl"] .field input{text-align:right}
+.err{color:var(--danger);font-size:.85em}
+.wa{display:flex;gap:10px;align-items:flex-start;background:var(--ok-soft);color:var(--ok);border-radius:12px;padding:10px 12px;font-size:.88em}
+
+/* home */
+.hello h1{font-size:1.45em}
+.recovery{background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.recovery h2{font-size:1.15em}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.days span{height:30px;border-radius:8px;display:grid;place-items:center;font-size:.75em;font-weight:600;background:color-mix(in srgb,var(--accent-ink) 14%,transparent)}
+.days span.past{background:color-mix(in srgb,var(--accent-ink) 34%,transparent)}
+.days span.now{background:var(--accent-ink);color:var(--accent)}
+.days span.goal{outline:2px dashed color-mix(in srgb,var(--accent-ink) 60%,transparent);outline-offset:-2px}
+.appt{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.cal{width:62px;border-radius:12px;border:1px solid var(--line);overflow:hidden;text-align:center;background:var(--sunk)}
+.cal b{display:block;background:var(--danger);color:#fff;font-size:.72em;padding:2px 0;font-weight:600}
+.cal span{display:block;font-family:var(--display);font-size:1.5em;font-weight:700;padding:2px 0}
+
+.dose{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.dose:first-of-type{border-top:0}
+.dose .time{font-family:var(--display);font-weight:600;min-width:64px}
+.check{width:34px;height:34px;border-radius:10px;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;color:transparent}
+.check[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.dose.done .what{color:var(--muted);text-decoration:line-through}
+.dose.nextup .time{color:var(--accent)}
+
+/* meds */
+.med-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.med-head h3{font-size:1em}
+.bar{height:6px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.times{display:flex;flex-wrap:wrap;gap:8px}
+.tchip{border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:6px 12px;font-weight:600;font-size:.88em;display:flex;gap:6px;align-items:center}
+.tchip[aria-pressed="true"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+
+/* care */
+.phase{display:flex;flex-direction:column;gap:8px}
+.phase-h{display:flex;gap:8px;align-items:center}
+.phase-h h3{font-size:.98em}
+.rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.rules li{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.rules li:first-child{border-top:0}
+.rules .b{width:8px;height:8px;border-radius:99px;background:var(--accent);margin-top:.6em;justify-self:center}
+.phase.past{opacity:.6}
+.alarm{background:var(--danger-soft);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;color:var(--ink)}
+.alarm h3{color:var(--danger);font-size:1em}
+.alarm ul{margin:0;padding-inline-start:20px}
+.phone{font-family:var(--display);font-weight:700;direction:ltr;unicode-bidi:isolate;user-select:all}
+
+/* plan */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.steps li{display:grid;grid-template-columns:28px 1fr;gap:12px;position:relative;padding-bottom:16px}
+.steps li::before{content:"";position:absolute;inset-inline-start:13px;top:26px;bottom:0;width:2px;background:var(--line)}
+.steps li:last-child::before{display:none}
+.steps .n{width:28px;height:28px;border-radius:99px;display:grid;place-items:center;font-size:.8em;font-weight:700;background:var(--sunk);border:2px solid var(--line);color:var(--muted)}
+.steps li.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.steps li.next .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.xgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.xray{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#050607}
+.xray canvas{display:block;width:100%;height:auto;max-width:100%}
+.xray figcaption{background:var(--surface);padding:8px 10px;font-size:.82em}
+.info-list{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.92em}
+.info-list dt{color:var(--muted)}
+.info-list dd{margin:0}
+
+/* chat */
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%;padding:10px 14px;border-radius:16px;white-space:pre-line}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-end-end-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-end-start-radius:4px;display:flex;flex-direction:column;gap:8px}
+.msg.bot.pending{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.msg.bot.emergency{background:var(--danger-soft);border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
+.msg .src{font-size:.75em;color:var(--muted);border-top:1px solid var(--line);padding-top:6px}
+.typing{align-self:flex-start;color:var(--muted);font-size:.85em}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.chips button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:.85em}
+.composer{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--bg);border-top:1px solid var(--line)}
+.composer form{max-width:460px;margin:0 auto;display:flex;gap:8px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.composer input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 14px}
+main.chatting{padding-bottom:170px}
+.note{font-size:.78em;color:var(--muted);text-align:center}
+
+/* notifications sheet */
+.sheet-bg{position:fixed;inset:0;background:rgba(5,15,18,.45);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding-top:calc(60px + env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet{width:100%;max-width:430px;background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:4px;max-height:70vh;overflow:auto}
+.notif{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 4px;border-top:1px solid var(--line)}
+.notif:first-of-type{border-top:0}
+.notif .ch{width:30px;height:30px;border-radius:9px;display:grid;place-items:center}
+.notif .ch.app{background:var(--accent-soft);color:var(--accent)}
+.notif .ch.wa{background:var(--ok-soft);color:var(--ok)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:30;font-size:.9em;max-width:90vw}
+@media (prefers-reduced-motion:no-preference){.msg{animation:pop .18s ease-out}@keyframes pop{from{transform:translateY(4px);opacity:.4}}}
+</style>
+
+<div class="shell" id="root"></div>
+
+<script>
+(function(){
+/* ---------- state ---------- */
+const S={lang:'ar',big:false,view:'home',taken:{},logged:false,step:'phone',err:'',chat:[],notif:false,typing:false};
+try{const s=JSON.parse(localStorage.getItem('mk-patient')||'{}');['lang','big','taken','logged'].forEach(k=>{if(k in s)S[k]=s[k]})}catch(e){}
+function save(){try{localStorage.setItem('mk-patient',JSON.stringify({lang:S.lang,big:S.big,taken:S.taken,logged:S.logged}))}catch(e){}}
+
+/* ---------- dates ---------- */
+const now=new Date(); const today=new Date(now); today.setHours(0,0,0,0);
+const day=n=>{const d=new Date(today);d.setDate(d.getDate()+n);return d};
+const key=d=>d.toISOString().slice(0,10);
+const loc=()=>S.lang==='ar'?'ar-IQ-u-nu-latn':'en-GB';
+const fmtDate=(d,o)=>d.toLocaleDateString(loc(),o||{weekday:'long',day:'numeric',month:'long'});
+function fmtTime(t){let [h,m]=t.split(':').map(Number);const pm=h>=12;let hh=h%12||12;return `${hh}:${String(m).padStart(2,'0')} ${S.lang==='ar'?(pm?'م':'ص'):(pm?'PM':'AM')}`}
+const L=o=>o==null?'':typeof o==='string'?o:(o[S.lang]??o.ar);
+
+/* ---------- clinic + patient data (demo) ---------- */
+const CLINIC={name:{ar:'عيادة الدكتور مصطفى كمال',en:'Dr. Mustafa Kamal Dental Clinic'},sub:{ar:'طب وتجميل الأسنان · الأعظمية',en:'Dentistry · Al-Adhamiya'},
+  phone:'0770 980 4412',address:{ar:'بغداد، الأعظمية، شارع عمر بن عبد العزيز، قرب جامع أبي حنيفة، الطابق الأول',en:'1st floor, Omar bin Abdulaziz St., near Abu Hanifa Mosque, Al-Adhamiya, Baghdad'},
+  hours:{ar:'السبت إلى الخميس، من 4:00 م إلى 10:00 م',en:'Saturday to Thursday, 4:00 PM to 10:00 PM'}};
+const P={name:{ar:'أحمد علي حسن',en:'Ahmed Ali Hassan'},first:{ar:'أحمد',en:'Ahmed'},phone:'0770 123 4567',file:'MK-0142',
+  proc:{ar:'قلع ضرس العقل السفلي الأيسر (السن 38)',en:'Lower left wisdom tooth extraction (tooth 38)'},procDay:-1,
+  next:{d:day(6),t:'17:30',what:{ar:'فك الغرز والمراجعة',en:'Suture removal and check-up'},dr:{ar:'د. مصطفى كمال',en:'Dr. Mustafa Kamal'}}};
+const MEDS=[
+  {id:'amox',name:{ar:'أموكسيسيلين 500 ملغ',en:'Amoxicillin 500 mg'},how:{ar:'كبسولة وحدة كل 8 ساعات بعد الأكل. كمّل الكورس كامل حتى لو خف الألم.',en:'One capsule every 8 hours after food. Finish the full course even if the pain eases.'},times:['07:00','15:00','23:00'],days:5,start:-1,type:{ar:'مضاد حيوي',en:'Antibiotic'}},
+  {id:'chx',name:{ar:'غسول كلورهيكسيدين 0.12%',en:'Chlorhexidine 0.12% mouthwash'},how:{ar:'مضمضة لطيفة لمدة 30 ثانية صبح ومساء، بدون بصق قوي. يبدأ من اليوم الثاني.',en:'Gentle 30-second rinse morning and evening, no forceful spitting. Starts on day 2.'},times:['09:00','21:00'],days:7,start:0,type:{ar:'غسول فم',en:'Mouthwash'}},
+  {id:'ibu',name:{ar:'إيبوبروفين 400 ملغ',en:'Ibuprofen 400 mg'},how:{ar:'حبة وحدة عند الألم فقط، بعد الأكل. لا تزيد عن 3 حبات باليوم.',en:'One tablet only when in pain, after food. No more than 3 a day.'},times:[],prn:true,days:3,start:-1,type:{ar:'مسكن عند الحاجة',en:'Painkiller as needed'}}
+];
+const CARE=[
+  {id:'h24',from:-1,to:-1,title:{ar:'أول 24 ساعة',en:'First 24 hours'},items:[
+    {ar:'اعضّ على الشاش 30 دقيقة بعد القلع، وبعدين ارميه.',en:'Bite on the gauze for 30 minutes after the extraction, then throw it away.'},
+    {ar:'لا تمضمض، لا تبصق، ولا تشرب بالشفاطة.',en:'No rinsing, no spitting, no drinking through a straw.'},
+    {ar:'كمّادات باردة على الخد 15 دقيقة، وارتاح 15 دقيقة، وكرر.',en:'Cold pack on the cheek for 15 minutes on, 15 off, and repeat.'},
+    {ar:'أكل بارد وناعم فقط: لبن، شوربة فاترة، بطاطا مهروسة.',en:'Cold, soft food only: yoghurt, lukewarm soup, mashed potato.'}]},
+  {id:'d2',from:0,to:1,title:{ar:'اليوم الثاني والثالث',en:'Days 2 and 3'},items:[
+    {ar:'مضمضة لطيفة بماء دافئ وملح (نص ملعقة صغيرة بكوب ماء) بعد كل أكلة.',en:'Gentle warm salt-water rinse (half a teaspoon in a glass) after every meal.'},
+    {ar:'ابدأ غسول الكلورهيكسيدين صبح ومساء.',en:'Start the chlorhexidine mouthwash morning and evening.'},
+    {ar:'امضغ على الجهة اليمنى، وابتعد عن الأكل الحار والقاسي.',en:'Chew on the right side and avoid spicy and hard food.'},
+    {ar:'فرّش أسنانك طبيعي بفرشاة ناعمة، وابتعد عن مكان القلع.',en:'Brush normally with a soft brush, keeping away from the extraction site.'}]},
+  {id:'w1',from:2,to:6,title:{ar:'لحد موعد فك الغرز',en:'Until suture removal'},items:[
+    {ar:'لا تدخن، لأن التدخين يأخر الالتئام ويسبب السنخ الجاف.',en:'No smoking. It slows healing and can cause dry socket.'},
+    {ar:'لا رياضة قوية ولا رفع أثقال أول 3 أيام.',en:'No hard exercise or heavy lifting for the first 3 days.'},
+    {ar:'الغرز تبقى مكانها، لا تحاول تسحبها بلسانك.',en:'Leave the sutures alone and do not pull at them with your tongue.'}]}
+];
+const PLAN=[
+  {s:'done',d:-8,t:{ar:'فحص شامل وأشعة بانوراما',en:'Full exam and panoramic X-ray'}},
+  {s:'done',d:-1,t:{ar:'قلع جراحي لضرس العقل 38',en:'Surgical extraction of 38'}},
+  {s:'next',d:6,t:{ar:'فك الغرز والمراجعة',en:'Suture removal and check-up'}},
+  {s:'plan',t:{ar:'علاج عصب للضرس 16 (جلستين)',en:'Root canal on 16 (two visits)'}},
+  {s:'plan',t:{ar:'تاج زركون للضرس 16',en:'Zirconia crown on 16'}},
+  {s:'plan',t:{ar:'تنظيف وتلميع، وبعدها مراجعة كل 6 أشهر',en:'Scale and polish, then a check-up every 6 months'}}
+];
+const XRAYS=[
+  {type:'pano',d:-8,note:{ar:'بانوراما أولية قبل العلاج',en:'Initial panoramic before treatment'},missing:[],seed:11},
+  {type:'pa',d:-1,note:{ar:'أشعة صغيرة بعد قلع 38',en:'Periapical after extracting 38'},missing:[1],seed:4}
+];
+const NOTIFS=[
+  {ch:'app',t:{ar:'حان وقت كبسولة الأموكسيسيلين (7:00 ص)',en:'Time for your amoxicillin capsule (7:00 AM)'},w:{ar:'اليوم',en:'Today'}},
+  {ch:'wa',t:{ar:'تعليمات ما بعد القلع: اليوم تبدأ المضمضة بالماء والملح',en:'Aftercare: today you start the salt-water rinse'},w:{ar:'اليوم',en:'Today'}},
+  {ch:'wa',t:{ar:'د. مصطفى: إذا عندك أي سؤال اكتبه بالتطبيق أو هنا بالواتساب',en:'Dr. Mustafa: send any question in the app or here on WhatsApp'},w:{ar:'أمس',en:'Yesterday'}},
+  {ch:'app',t:{ar:'تم تثبيت موعد فك الغرز',en:'Your suture removal is booked'},w:{ar:'أمس',en:'Yesterday'}}
+];
+
+/* ---------- text ---------- */
+const T={
+ar:{demo:'نموذج تجريبي. كل البيانات وهمية.',welcome:'أهلاً بك',loginText:'اكتب رقم هاتفك المسجّل بالعيادة، ونرسلك رمز دخول على الواتساب.',phone:'رقم الهاتف',send:'أرسل الرمز',code:'رمز الدخول',codeHint:'أرسلنا رمز من 4 أرقام على واتساب',codeDemo:'للتجربة اكتب 1234',enter:'دخول',badCode:'الرمز غير صحيح. للتجربة اكتب 1234',change:'تغيير الرقم',noPass:'بدون كلمة سر. كل مرة يوصلك رمز جديد.',
+ home:'الرئيسية',meds:'أدويتي',care:'تعليماتي',plan:'علاجي',chat:'اسأل',
+ hi:'مرحباً',dayN:n=>['اليوم الأول','اليوم الثاني','اليوم الثالث','اليوم الرابع','اليوم الخامس','اليوم السادس','اليوم السابع'][n]||`اليوم ${n+1}`,after:'بعد القلع',recoveryText:'الالتئام ماشي طبيعي. اليوم تبدأ المضمضة بالماء والملح والغسول.',suturesOn:'فك الغرز',
+ nextAppt:'موعدك القادم',inDays:n=>n===0?'اليوم':n===1?'باجر':`بعد ${n} أيام`,with:'مع',todayDoses:'جرعات اليوم',all:'الكل',nextDose:'الجرعة الجاية',allDone:'خلصت كل جرعات اليوم',taken:'أخذتها',
+ todayTip:'تعليمة اليوم',ask:'عندك سؤال عن حالتك؟',askBtn:'اسأل المساعد',
+ dayOf:(a,b)=>`اليوم ${a} من ${b}`,whenNeeded:'عند الحاجة فقط',logDose:'سجّل جرعة',logged:n=>`سجّلت ${n} اليوم`,max3:'الحد الأعلى 3 باليوم',reached:'وصلت الحد الأعلى لليوم',startsTomorrow:'يبدأ باجر',
+ now:'هسه',past:'خلصت',soon:'جاية',callNow:'اتصل بالعيادة فوراً إذا صار عندك:',signs:['نزيف ما يوقف بعد 30 دقيقة ضغط على الشاش','تورّم يزيد بعد اليوم الثالث','حرارة أعلى من 38','صعوبة بالبلع أو التنفس','ألم قوي يزيد بعد اليوم الثالث'],clinicPhone:'هاتف العيادة',copy:'نسخ',copied:'تم نسخ الرقم',
+ planT:'خطة علاجك',xrays:'أشعتك',clinicInfo:'العيادة',address:'العنوان',hours:'الدوام',phoneL:'الهاتف',
+ chatHello:n=>`أهلاً ${n}. أنا مساعد عيادة الدكتور مصطفى. أجاوبك من ملفك ومن تعليمات الدكتور. إذا السؤال يحتاج رأيه، أرسله له وأخبرك.`,
+ sugg:['متى أقدر آكل طبيعي؟','عندي ألم، شنو آخذ؟','أقدر أدخن؟','أقدر آخذ حبتين بروفين مرة وحدة؟','عندي نزيف من مكان القلع'],
+ placeholder:'اكتب سؤالك...',sendBtn:'إرسال',typing:'المساعد يكتب...',chatNote:'نموذج: الردود هنا محاكاة. النسخة الحقيقية تستخدم الذكاء الاصطناعي.',
+ src:'المصدر: تعليمات د. مصطفى كمال لحالتك',pendingTag:'بانتظار الطبيب',emTag:'مهم',okTag:'جواب من ملفك',
+ notifs:'الإشعارات',close:'إغلاق',app:'تطبيق',wa:'واتساب',bigText:'تكبير الخط',logout:'خروج',
+ ans:{
+  eat:'من اليوم الثاني تقدر ترجع تدريجياً للأكل العادي. امضغ على الجهة اليمنى، وابتعد عن الأكل الحار والقاسي (مكسرات، خبز يابس) لحد ما تفك الغرز.',
+  pain:'الألم الخفيف إلى المتوسط طبيعي أول 3 أيام ويخف تدريجياً. حسب وصفة الدكتور: حبة إيبوبروفين 400 ملغ عند الألم بعد الأكل، ولا تزيد عن 3 حبات باليوم. الكمادات الباردة تساعد هم.',
+  smoke:'لا تدخن لحد موعد فك الغرز، وأقل شي 72 ساعة. التدخين يأخر الالتئام ويسبب السنخ الجاف، وهو ألم قوي.',
+  rinse:'من اليوم: مضمضة لطيفة بماء دافئ وملح بعد كل أكلة، وغسول الكلورهيكسيدين صبح ومساء. لا تمضمض بقوة ولا تبصق بقوة.',
+  brush:'فرّش أسنانك طبيعي بفرشاة ناعمة صبح ومساء، بس ابتعد عن مكان القلع أول 3 أيام.',
+  straw:'لا تستخدم الشفاطة لحد ما تفك الغرز، لأن الشفط ممكن يحرك الجلطة من مكان القلع.',
+  sport:'تجنّب الرياضة القوية ورفع الأثقال أول 3 أيام. المشي الخفيف ما بيه مشكلة.',
+  appt:d=>`موعدك القادم ${d} لفك الغرز والمراجعة.`,
+  pending:'هذا السؤال يحتاج رأي الدكتور مباشرة، فأرسلته للدكتور مصطفى. يوصلك جوابه هنا وعلى الواتساب. لحد ذاك التزم بالجرعة الموصوفة.',
+  unknown:'ما عندي معلومة مؤكدة بملفك عن هذا السؤال، فأرسلته للدكتور مصطفى حتى يجاوبك بنفسه. يوصلك الجواب هنا وعلى الواتساب.',
+  emergency:p=>`اللي توصفه يحتاج تواصل مباشر مع العيادة.\n• اضغط على قطعة شاش نظيفة مكان القلع لمدة 30 دقيقة بدون ما ترفعها.\n• اتصل بالعيادة الآن: ${p}\n• إذا النزيف شديد أو عندك صعوبة بالتنفس، روح لأقرب طوارئ.\nأرسلنا تنبيه للدكتور مصطفى هسه.`}},
+en:{demo:'Demo prototype. All data is made up.',welcome:'Welcome',loginText:'Enter the phone number registered at the clinic and we will send you a sign-in code on WhatsApp.',phone:'Phone number',send:'Send code',code:'Sign-in code',codeHint:'We sent a 4-digit code on WhatsApp',codeDemo:'For the demo, type 1234',enter:'Sign in',badCode:'Wrong code. For the demo, type 1234',change:'Change number',noPass:'No password. You get a new code each time.',
+ home:'Home',meds:'Medicines',care:'Aftercare',plan:'Treatment',chat:'Ask',
+ hi:'Hello',dayN:n=>`Day ${n+1}`,after:'after the extraction',recoveryText:'Healing is on track. Today you start the salt-water rinse and the mouthwash.',suturesOn:'Sutures out',
+ nextAppt:'Next appointment',inDays:n=>n===0?'Today':n===1?'Tomorrow':`In ${n} days`,with:'with',todayDoses:"Today's doses",all:'All',nextDose:'Next dose',allDone:"All of today's doses are done",taken:'Taken',
+ todayTip:"Today's instruction",ask:'A question about your treatment?',askBtn:'Ask the assistant',
+ dayOf:(a,b)=>`Day ${a} of ${b}`,whenNeeded:'Only when needed',logDose:'Log a dose',logged:n=>`${n} logged today`,max3:'Maximum 3 a day',reached:"You've reached today's maximum",startsTomorrow:'Starts tomorrow',
+ now:'Now',past:'Done',soon:'Coming up',callNow:'Call the clinic straight away if you have:',signs:['Bleeding that does not stop after 30 minutes of pressure on gauze','Swelling that gets worse after day 3','A temperature above 38°C','Difficulty swallowing or breathing','Strong pain that gets worse after day 3'],clinicPhone:'Clinic phone',copy:'Copy',copied:'Number copied',
+ planT:'Your treatment plan',xrays:'Your X-rays',clinicInfo:'The clinic',address:'Address',hours:'Hours',phoneL:'Phone',
+ chatHello:n=>`Hello ${n}. I'm Dr. Mustafa's clinic assistant. I answer from your file and the doctor's instructions. If a question needs his opinion, I'll send it to him and let you know.`,
+ sugg:['When can I eat normally?',"I'm in pain, what should I take?",'Can I smoke?','Can I take two ibuprofen at once?',"I'm bleeding from the extraction site"],
+ placeholder:'Type your question...',sendBtn:'Send',typing:'The assistant is typing...',chatNote:'Demo: replies here are simulated. The real version uses AI.',
+ src:"Source: Dr. Mustafa Kamal's instructions for your case",pendingTag:'Waiting for the doctor',emTag:'Important',okTag:'Answered from your file',
+ notifs:'Notifications',close:'Close',app:'App',wa:'WhatsApp',bigText:'Larger text',logout:'Sign out',
+ ans:{
+  eat:'From day 2 you can slowly go back to normal food. Chew on the right side and avoid spicy and hard food (nuts, dry bread) until the sutures are out.',
+  pain:"Mild to moderate pain is normal for the first 3 days and eases gradually. As prescribed: one 400 mg ibuprofen when in pain, after food, no more than 3 a day. A cold pack also helps.",
+  smoke:'Please do not smoke until the sutures are out, and at least for 72 hours. Smoking slows healing and can cause dry socket, which is very painful.',
+  rinse:'From today: a gentle warm salt-water rinse after every meal, plus the chlorhexidine mouthwash morning and evening. Do not rinse or spit forcefully.',
+  brush:'Brush normally with a soft brush morning and evening, but keep away from the extraction site for the first 3 days.',
+  straw:'Do not use a straw until the sutures are out. Suction can dislodge the clot from the socket.',
+  sport:'Avoid hard exercise and heavy lifting for the first 3 days. Light walking is fine.',
+  appt:d=>`Your next appointment is ${d} for suture removal and a check-up.`,
+  pending:"This question needs the doctor's direct opinion, so I've sent it to Dr. Mustafa. His answer will come here and on WhatsApp. Until then, stay on the prescribed dose.",
+  unknown:"I don't have confirmed information in your file about this, so I've sent it to Dr. Mustafa to answer himself. You'll get the reply here and on WhatsApp.",
+  emergency:p=>`What you describe needs direct contact with the clinic.\n• Press a clean piece of gauze on the site for 30 minutes without lifting it.\n• Call the clinic now: ${p}\n• If bleeding is heavy or you have trouble breathing, go to the nearest emergency department.\nWe've alerted Dr. Mustafa.`}}
+};
+const t=k=>T[S.lang][k];
+
+/* ---------- icons ---------- */
+const I={
+ tooth:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3.5c-2.5 0-4 2-4 4.5 0 3 1.5 4.5 2 7.5.4 2.5 1 5 2.5 5s1.6-3.5 2.5-5.5c.5-1 1.5-1 2 0 .9 2 1 5.5 2.5 5.5s2.1-2.5 2.5-5c.5-3 2-4.5 2-7.5 0-2.5-1.5-4.5-4-4.5-2 0-3 1-5 1s-3-1-5-1z"/></svg>',
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4z"/></svg>',
+ pill:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-35 12 12)"/><path d="m9.3 8.2 5.4 7.6" /></svg>',
+ list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>',
+ plan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2.5v3M16 2.5v3M4 9.5h16M8 13.5h3M8 17h6"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+ bell:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/></svg>',
+ check:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+ wa:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.8z"/></svg>'
+};
+
+/* ---------- X-ray drawing (synthetic) ---------- */
+function rng(seed){let s=seed*9973%233280;return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
+function drawTooth(ctx,x,yOcc,w,len,dir,fill){
+  const g=ctx.createLinearGradient(0,yOcc,0,yOcc+dir*len);g.addColorStop(0,'rgba(235,238,240,.95)');g.addColorStop(.28,'rgba(200,205,208,.85)');g.addColorStop(1,'rgba(120,126,130,.35)');
+  ctx.fillStyle=g;const y=dir>0?yOcc:yOcc-len;rr(ctx,x-w/2,y,w,len,w*.35);ctx.fill();
+  ctx.fillStyle='rgba(40,44,46,.55)';const cw=w*.18,cy=dir>0?yOcc+len*.3:yOcc-len*.92;rr(ctx,x-cw/2,cy,cw,len*.62,cw/2);ctx.fill();
+  if(fill){ctx.fillStyle='rgba(255,255,255,.98)';const fy=dir>0?yOcc+2:yOcc-len*.22;rr(ctx,x-w*.28,fy,w*.56,len*.2,4);ctx.fill()}
+}
+function drawXray(cv,x){
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,r=rng(x.seed);
+  ctx.fillStyle='#050607';ctx.fillRect(0,0,W,H);
+  const g=ctx.createRadialGradient(W/2,H/2,10,W/2,H/2,W*.65);g.addColorStop(0,'rgba(110,118,122,.55)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  try{ctx.filter='blur(1.2px)'}catch(e){}
+  if(x.type==='pano'){
+    ctx.strokeStyle='rgba(180,186,190,.18)';ctx.lineWidth=22;ctx.beginPath();ctx.ellipse(W/2,H*.2,W*.44,H*.68,0,.12*Math.PI,.88*Math.PI);ctx.stroke();
+    const n=16,span=W*.74,x0=W*.13,tw=span/n*.82;
+    for(let row=0;row<2;row++)for(let i=0;i<n;i++){
+      const tt=(i+.5)/n,cx=x0+tt*span,c=Math.pow((tt-.5)*2,2),mol=Math.abs(tt-.5)>.3;
+      const yOcc=H*.5+(row?6:-6)-c*H*.07;const len=(mol?H*.25:H*.3)*(0.92+r()*.12);const w=mol?tw*1.12:tw*.86;
+      if(row===1&&i===15&&x.extracted)continue;
+      drawTooth(ctx,cx,yOcc,w,len,row?1:-1,r()>.84);
+    }
+  }else{
+    const n=3,tw=W*.22;
+    for(let i=0;i<n;i++){const cx=W*(.22+i*.28);if(x.missing.includes(i)){ctx.fillStyle='rgba(20,22,24,.8)';rr(ctx,cx-tw*.4,H*.18,tw*.8,H*.5,tw*.3);ctx.fill();continue}
+      drawTooth(ctx,cx,H*.12,tw,H*.7,1,i===0)}
+  }
+  try{ctx.filter='none'}catch(e){}
+  for(let k=0;k<1400;k++){ctx.fillStyle=`rgba(255,255,255,${r()*.05})`;ctx.fillRect(r()*W,r()*H,1.5,1.5)}
+  ctx.fillStyle='rgba(255,255,255,.55)';ctx.font='12px monospace';ctx.fillText(x.type==='pano'?'R':'38',10,18);
+}
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dayIdx=-P.procDay; // 1 => day two
+function dosesToday(){
+  const out=[];MEDS.forEach(m=>{if(m.prn)return;const d=-m.start;if(d<0||d>=m.days)return;m.times.forEach(tm=>out.push({m,tm,id:`${key(today)}|${m.id}|${tm}`}))});
+  return out.sort((a,b)=>a.tm.localeCompare(b.tm));
+}
+const nowHM=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+function prnCount(id){return S.taken[`${key(today)}|${id}|prn`]||0}
+
+/* ---------- views ---------- */
+function vLogin(){
+  return `<div class="demo-flag">${t('demo')}</div>
+  <div class="login">
+    <div class="mark">${I.tooth}</div>
+    <div style="display:flex;flex-direction:column;gap:6px"><h1>${t('welcome')}</h1><p class="muted">${L(CLINIC.name)}</p></div>
+    ${S.step==='phone'?`
+      <form id="f-phone" style="display:flex;flex-direction:column;gap:14px">
+        <div class="field"><label for="ph">${t('phone')}</label><input id="ph" inputmode="tel" value="${P.phone}" autocomplete="tel"></div>
+        <p class="muted small">${t('loginText')}</p>
+        <button class="btn block" type="submit">${t('send')}</button>
+      </form>`:`
+      <form id="f-code" style="display:flex;flex-direction:column;gap:14px">
+        <div class="wa">${I.wa}<span>${t('codeHint')} <b class="num" dir="ltr">${P.phone}</b><br>${t('codeDemo')}</span></div>
+        <div class="field"><label for="cd">${t('code')}</label><input id="cd" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="••••"></div>
+        ${S.err?`<p class="err">${S.err}</p>`:''}
+        <button class="btn block" type="submit">${t('enter')}</button>
+        <button class="btn ghost block" type="button" data-act="back">${t('change')}</button>
+      </form>`}
+    <p class="muted small">${t('noPass')}</p>
+    <div class="row" style="justify-content:center;gap:8px"><button class="icon-btn" data-act="lang">${S.lang==='ar'?'English':'عربي'}</button><button class="icon-btn" data-act="big">${S.big?'A':'A+'}</button></div>
+  </div>`;
+}
+function header(){
+  return `<header class="top">
+    <div class="brand"><div class="mark">${I.tooth}</div><div style="min-width:0"><b>${L(CLINIC.name)}</b><small>${L(CLINIC.sub)}</small></div></div>
+    <button class="icon-btn" data-act="big" aria-label="${t('bigText')}">${S.big?'A':'A+'}</button>
+    <button class="icon-btn" data-act="lang">${S.lang==='ar'?'EN':'ع'}</button>
+    <button class="icon-btn" data-act="notif" aria-label="${t('notifs')}">${I.bell}<span class="dot">2</span></button>
+  </header>`;
+}
+function nav(){
+  const items=[['home',I.home],['meds',I.pill],['care',I.list],['plan',I.plan],['chat',I.chat]];
+  return `<nav class="tabs"><div class="in">${items.map(([v,ic])=>`<button data-view="${v}" ${S.view===v?'aria-current="page"':''}>${ic}<span>${t(v)}</span></button>`).join('')}</div></nav>`;
+}
+function doseRow(x,nextId){
+  const done=!!S.taken[x.id];
+  return `<div class="dose ${done?'done':''} ${x.id===nextId?'nextup':''}">
+    <span class="time num">${fmtTime(x.tm)}</span>
+    <div class="what"><b>${L(x.m.name)}</b><div class="small muted">${L(x.m.type)}</div></div>
+    <button class="check" data-dose="${x.id}" aria-pressed="${done}" aria-label="${t('taken')}">${I.check}</button>
+  </div>`;
+}
+function vHome(){
+  const ds=dosesToday();const nxt=ds.find(x=>!S.taken[x.id]&&x.tm>=nowHM)||ds.find(x=>!S.taken[x.id]);
+  const daysTo=Math.round((P.next.d-today)/864e5);
+  const tip=CARE[1].items[0];
+  return `
+  <div class="hello"><p class="muted">${t('hi')}</p><h1>${L(P.name)}</h1></div>
+  <section class="recovery">
+    <div class="eyebrow" style="color:inherit;opacity:.85">${L(P.proc)}</div>
+    <h2>${t('dayN')(dayIdx)} ${t('after')}</h2>
+    <div class="days">${Array.from({length:7},(_,i)=>`<span class="num ${i<dayIdx?'past':i===dayIdx?'now':''} ${i===6?'goal':''}">${i+1}</span>`).join('')}</div>
+    <p class="small" style="opacity:.92">${t('recoveryText')}</p>
+  </section>
+  <section class="card">
+    <div class="eyebrow">${t('nextAppt')}</div>
+    <div class="appt">
+      <div class="cal"><b>${fmtDate(P.next.d,{month:'short'})}</b><span class="num">${P.next.d.getDate()}</span></div>
+      <div><h3 style="font-size:1.02em">${L(P.next.what)}</h3>
+      <p class="muted small">${fmtDate(P.next.d,{weekday:'long'})} · ${fmtTime(P.next.t)} · ${t('with')} ${L(P.next.dr)}</p>
+      <span class="pill info">${t('inDays')(daysTo)}</span></div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="section-title"><h2>${t('todayDoses')}</h2><button data-view="meds">${t('all')}</button></div>
+    ${nxt?'':`<span class="pill ok">${t('allDone')}</span>`}
+    <div>${ds.map(x=>doseRow(x,nxt&&nxt.id)).join('')}</div>
+  </section>
+  <section class="card" style="background:var(--accent-soft);border-color:transparent">
+    <div class="eyebrow" style="color:var(--accent)">${t('todayTip')}</div>
+    <p>${L(tip)}</p>
+  </section>
+  <section class="card">
+    <p><b>${t('ask')}</b></p>
+    <button class="btn" data-view="chat">${t('askBtn')}</button>
+  </section>`;
+}
+function vMeds(){
+  const ds=dosesToday();
+  return `<h1 style="font-size:1.35em">${t('meds')}</h1>`+MEDS.map(m=>{
+    const d=-m.start;const active=d>=0&&d<m.days;const pct=Math.min(100,Math.max(0,((d+1)/m.days)*100));
+    let body='';
+    if(m.prn){const c=prnCount(m.id);body=`<div class="row between"><span class="small muted">${t('logged')(c)} · ${t('max3')}</span><button class="btn ghost" data-prn="${m.id}" ${c>=3?'disabled':''}>${c>=3?t('reached'):t('logDose')}</button></div>`}
+    else if(!active&&d<0){body=`<span class="pill info">${t('startsTomorrow')}</span>`}
+    else{body=`<div class="times">${ds.filter(x=>x.m===m).map(x=>`<button class="tchip num" data-dose="${x.id}" aria-pressed="${!!S.taken[x.id]}">${S.taken[x.id]?I.check:''}${fmtTime(x.tm)}</button>`).join('')}</div>`}
+    return `<section class="card">
+      <div class="med-head"><div><h3>${L(m.name)}</h3><span class="small muted">${L(m.type)}</span></div>${m.prn?`<span class="pill warn">${t('whenNeeded')}</span>`:`<span class="pill info num">${t('dayOf')(Math.min(d+1,m.days),m.days)}</span>`}</div>
+      <p class="small">${L(m.how)}</p>
+      ${m.prn?'':`<div class="bar"><i style="width:${pct}%"></i></div>`}
+      ${body}
+    </section>`}).join('');
+}
+function vCare(){
+  return `<h1 style="font-size:1.35em">${t('care')}</h1><p class="muted small">${L(P.proc)}</p>`+
+  CARE.map(c=>{const d=dayIdx-1;const st=d>c.to?'past':d>=c.from?'now':'soon';
+    return `<section class="card phase ${st==='past'?'past':''}">
+      <div class="phase-h"><h3>${L(c.title)}</h3><span class="pill ${st==='now'?'info':st==='past'?'ok':'warn'}">${t(st)}</span></div>
+      <ul class="rules">${c.items.map(i=>`<li><span class="b"></span><span>${L(i)}</span></li>`).join('')}</ul>
+    </section>`}).join('')+
+  `<section class="alarm"><h3>${t('callNow')}</h3><ul>${t('signs').map(s=>`<li>${s}</li>`).join('')}</ul>
+    <div class="row between" style="flex-wrap:wrap"><span>${t('clinicPhone')}: <span class="phone">${CLINIC.phone}</span></span><button class="btn ghost" data-act="copy">${t('copy')}</button></div></section>`;
+}
+function vPlan(){
+  return `<h1 style="font-size:1.35em">${t('planT')}</h1>
+  <section class="card"><ol class="steps">${PLAN.map((p,i)=>`<li class="${p.s==='done'?'done':p.s==='next'?'next':''}">
+    <span class="n num">${p.s==='done'?I.check:i+1}</span>
+    <div><b>${L(p.t)}</b><div class="small muted">${p.d!=null?fmtDate(day(p.d),{day:'numeric',month:'long'}):''} ${p.s==='next'?`<span class="pill info">${t('nextAppt')}</span>`:''}</div></div></li>`).join('')}</ol></section>
+  <section style="display:flex;flex-direction:column;gap:10px"><div class="section-title"><h2>${t('xrays')}</h2></div>
+    <div class="xgrid">${XRAYS.map((x,i)=>`<figure class="xray" style="margin:0"><canvas data-x="${i}" width="${x.type==='pano'?640:300}" height="${x.type==='pano'?300:360}"></canvas><figcaption><b>${L(x.note)}</b><div class="muted">${fmtDate(day(x.d),{day:'numeric',month:'long',year:'numeric'})}</div></figcaption></figure>`).join('')}</div></section>
+  <section class="card"><h2 style="font-size:1.05em">${t('clinicInfo')}</h2>
+    <dl class="info-list" style="margin:0"><dt>${t('address')}</dt><dd>${L(CLINIC.address)}</dd><dt>${t('hours')}</dt><dd>${L(CLINIC.hours)}</dd><dt>${t('phoneL')}</dt><dd><span class="phone">${CLINIC.phone}</span></dd></dl>
+    <button class="btn ghost" data-act="logout">${t('logout')}</button>
+  </section>`;
+}
+function vChat(){
+  const msgs=[{who:'bot',kind:'hello',text:t('chatHello')(L(P.first))},...S.chat];
+  return `<div class="chat" id="chat">${msgs.map(m=>{
+    if(m.who==='me')return `<div class="msg me">${esc(m.text)}</div>`;
+    const tag=m.kind==='ok'?`<span class="pill ok">${t('okTag')}</span>`:m.kind==='pending'?`<span class="pill warn">${t('pendingTag')}</span>`:m.kind==='emergency'?`<span class="pill danger">${t('emTag')}</span>`:'';
+    return `<div class="msg bot ${m.kind}">${tag}<span>${esc(m.text)}</span>${m.kind==='ok'?`<span class="src">${t('src')}</span>`:''}</div>`}).join('')}
+    ${S.typing?`<div class="typing">${t('typing')}</div>`:''}</div>
+    <p class="note">${t('chatNote')}</p>
+    <div class="composer"><div style="max-width:460px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))"><div class="chips">${t('sugg').map(s=>`<button data-sugg="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+    <form id="f-chat"><input id="q" placeholder="${t('placeholder')}" autocomplete="off"><button class="btn" type="submit">${t('sendBtn')}</button></form></div>`;
+}
+function vNotif(){
+  if(!S.notif)return '';
+  return `<div class="sheet-bg" data-act="notif"><div class="sheet" role="dialog" aria-label="${t('notifs')}">
+    <div class="row between"><h2 style="font-size:1.05em">${t('notifs')}</h2><button class="icon-btn" data-act="notif">${t('close')}</button></div>
+    ${NOTIFS.map(n=>`<div class="notif"><span class="ch ${n.ch}">${n.ch==='wa'?I.wa:I.bell}</span><div><div>${L(n.t)}</div><div class="small muted">${L(n.w)} · ${n.ch==='wa'?t('wa'):t('app')}</div></div></div>`).join('')}
+  </div></div>`;
+}
+
+/* ---------- chat logic (simulated) ---------- */
+function classify(q){
+  const s=q.toLowerCase().replace(/[أإآ]/g,'ا');const w=s.split(/[\s،,.?؟!]+/);
+  const has=a=>a.some(k=>s.includes(k));
+  if(has(['نزيف','ينزف','نزف','الدم','تورم','منتفخ','انتفاخ','ورم','حراره','حرارة','سخونه','سخونة','تنفس','البلع','ابلع','صديد','قيح','bleed','blood','swell','fever','breath','swallow','pus'])||w.includes('دم'))return 'emergency';
+  if(has(['جرعه','جرعة','حبتين','اضاعف','ازيد','اوقف','اقطع','ابدل','dose','double','two ibuprofen','stop taking','extra']))return 'pending';
+  if(has(['اكل','طعام','eat','food']))return 'eat';
+  if(has(['الم','يوجع','وجع','pain','hurt']))return 'pain';
+  if(has(['دخن','تدخين','سيكاره','سيجاره','اركيله','smok','cigar']))return 'smoke';
+  if(has(['مضمض','غسول','ملح','rinse','mouthwash']))return 'rinse';
+  if(has(['فرش','فرشاه','فرشاة','brush']))return 'brush';
+  if(has(['شفاط','ماصه','ماصة','straw']))return 'straw';
+  if(has(['رياض','نادي','جيم','sport','gym','exercise']))return 'sport';
+  if(has(['موعد','مراجعه','مراجعة','غرز','appointment','stitch','suture']))return 'appt';
+  return 'unknown';
+}
+function reply(q){
+  const c=classify(q),A=t('ans');let kind='ok',text;
+  if(c==='emergency'){kind='emergency';text=A.emergency(CLINIC.phone)}
+  else if(c==='pending'){kind='pending';text=A.pending}
+  else if(c==='unknown'){kind='pending';text=A.unknown}
+  else if(c==='appt'){text=A.appt(`${fmtDate(P.next.d)} ${fmtTime(P.next.t)}`)}
+  else text=A[c];
+  return {who:'bot',kind,text};
+}
+function ask(q){
+  q=q.trim();if(!q||S.typing)return;S.chat.push({who:'me',text:q});S.typing=true;render();
+  setTimeout(()=>{S.typing=false;S.chat.push(reply(q));render()},700);
+}
+
+/* ---------- render ---------- */
+const root=document.getElementById('root');
+function render(){
+  document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==='ar'?'rtl':'ltr';
+  document.body.classList.toggle('big',S.big);
+  if(!S.logged){root.innerHTML=vLogin();return}
+  const v={home:vHome,meds:vMeds,care:vCare,plan:vPlan,chat:vChat}[S.view]||vHome;
+  root.innerHTML=header()+`<main class="${S.view==='chat'?'chatting':''}">${v()}</main>`+nav()+vNotif();
+  root.querySelectorAll('canvas[data-x]').forEach(cv=>{const x=XRAYS[+cv.dataset.x];drawXray(cv,{...x,extracted:x.type==='pano'?false:true})});
+  if(S.view==='chat'){window.scrollTo(0,document.body.scrollHeight)}
+}
+function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
+
+root.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act],[data-view],[data-dose],[data-prn],[data-sugg]');if(!el)return;
+  if(el.classList.contains('sheet-bg')&&e.target!==el)return;
+  if(el.dataset.view){S.view=el.dataset.view;S.notif=false;render();window.scrollTo(0,0);if(S.view==='chat')window.scrollTo(0,document.body.scrollHeight);return}
+  if(el.dataset.dose){const id=el.dataset.dose;S.taken[id]=!S.taken[id];save();render();return}
+  if(el.dataset.prn){const k=`${key(today)}|${el.dataset.prn}|prn`;S.taken[k]=(S.taken[k]||0)+1;save();render();return}
+  if(el.dataset.sugg){ask(el.dataset.sugg);return}
+  const a=el.dataset.act;
+  if(a==='lang'){S.lang=S.lang==='ar'?'en':'ar';save();render()}
+  else if(a==='big'){S.big=!S.big;save();render()}
+  else if(a==='notif'){S.notif=!S.notif;render()}
+  else if(a==='back'){S.step='phone';S.err='';render()}
+  else if(a==='logout'){S.logged=false;S.step='phone';save();render()}
+  else if(a==='copy'){const p=CLINIC.phone;try{navigator.clipboard.writeText(p).then(()=>toast(t('copied')),()=>toast(p))}catch(err){toast(p)}}
+});
+root.addEventListener('submit',e=>{
+  e.preventDefault();
+  if(e.target.id==='f-phone'){S.step='code';S.err='';render();setTimeout(()=>{const c=document.getElementById('cd');c&&c.focus()},50)}
+  else if(e.target.id==='f-code'){const v=document.getElementById('cd').value.trim();if(v==='1234'){S.logged=true;S.step='phone';S.view='home';save();render()}else{S.err=t('badCode');render()}}
+  else if(e.target.id==='f-chat'){const q=document.getElementById('q');ask(q.value);}
+});
+render();
+})();
+</script>
