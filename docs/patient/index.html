@@ -173,6 +173,20 @@ main{flex:1;padding-block:16px 96px;padding-left:max(16px,env(safe-area-inset-le
 main.chatting{padding-bottom:170px}
 .note{font-size:.78em;color:var(--muted);text-align:center}
 
+/* booking */
+.dchips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px}
+.dchip{flex:none;width:68px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;line-height:1.35}
+.dchip b{font-family:var(--display);font-size:1.3em}
+.dchip small{font-size:.74em;color:var(--muted)}
+.dchip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
+.dchip[aria-pressed="true"] b,.dchip[aria-pressed="true"] small{color:var(--accent-ink)}
+.slots{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.slotbtn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start}
+.slotbtn b{font-family:var(--display)}
+.slotbtn small{color:var(--muted);font-size:.8em}
+.slotbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.slotbtn:disabled{opacity:.55;background:var(--sunk);cursor:not-allowed}
+
 /* notifications sheet */
 .sheet-bg{position:fixed;inset:0;background:rgba(5,15,18,.45);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding-top:calc(60px + env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sheet{width:100%;max-width:430px;background:var(--surface);border-radius:16px;border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:4px;max-height:70vh;overflow:auto}
@@ -193,7 +207,7 @@ main.chatting{padding-bottom:170px}
 <script>
 (function(){
 /* ---------- state ---------- */
-const S={lang:'ar',big:false,view:'home',taken:{},logged:false,step:'phone',err:'',chat:[],notif:false,typing:false};
+const S={lang:'ar',big:false,view:'home',taken:{},logged:false,step:'phone',err:'',chat:[],srvCount:0,draft:'',notif:false,typing:false,bk:{d:'',t:'',name:'',phone:'',err:'',ok:null}};
 try{const s=JSON.parse(localStorage.getItem('mk-patient')||'{}');['lang','big','taken','logged'].forEach(k=>{if(k in s)S[k]=s[k]})}catch(e){}
 function save(){try{localStorage.setItem('mk-patient',JSON.stringify({lang:S.lang,big:S.big,taken:S.taken,logged:S.logged}))}catch(e){}}
 
@@ -206,10 +220,23 @@ const fmtDate=(d,o)=>d.toLocaleDateString(loc(),o||{weekday:'long',day:'numeric'
 function fmtTime(t){let [h,m]=t.split(':').map(Number);const pm=h>=12;let hh=h%12||12;return `${hh}:${String(m).padStart(2,'0')} ${S.lang==='ar'?(pm?'م':'ص'):(pm?'PM':'AM')}`}
 const L=o=>o==null?'':typeof o==='string'?o:(o[S.lang]??o.ar);
 
+/* ---------- bookings (shared with the clinic dashboard through localStorage) ---------- */
+const BOOK={key:'mk-bookings',max:3,days:[0,1,2,3,4],startH:15,endH:21,window:21}; // Sun-Thu, 3 PM to 9 PM, 3 patients per hour
+let bookings=[];
+function loadBookings(){try{const a=JSON.parse(localStorage.getItem(BOOK.key)||'[]');bookings=Array.isArray(a)?a:[]}catch(e){bookings=[]}}
+function saveBookings(){try{localStorage.setItem(BOOK.key,JSON.stringify(bookings))}catch(e){}}
+loadBookings();
+const digits=s=>String(s).replace(/\D/g,'');
+const dkey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const bookingDays=()=>{const out=[];for(let i=0;i<=BOOK.window;i++){const d=day(i);if(BOOK.days.includes(d.getDay()))out.push(d)}return out};
+const slotTimes=()=>Array.from({length:BOOK.endH-BOOK.startH},(_,i)=>`${String(BOOK.startH+i).padStart(2,'0')}:00`);
+const slotStart=(dk,tm)=>{const [y,m,d]=dk.split('-').map(Number);const [h,mi]=tm.split(':').map(Number);return new Date(y,m-1,d,h,mi)};
+const seatsLeft=(dk,tm)=>BOOK.max-bookings.filter(b=>b.date===dk&&b.time===tm).length;
+
 /* ---------- clinic + patient data (demo) ---------- */
 const CLINIC={name:{ar:'عيادة الدكتور مصطفى كمال',en:'Dr. Mustafa Kamal Dental Clinic'},sub:{ar:'طب وتجميل الأسنان · الأعظمية',en:'Dentistry · Al-Adhamiya'},
   phone:'0770 980 4412',address:{ar:'بغداد، الأعظمية، شارع عمر بن عبد العزيز، قرب جامع أبي حنيفة، الطابق الأول',en:'1st floor, Omar bin Abdulaziz St., near Abu Hanifa Mosque, Al-Adhamiya, Baghdad'},
-  hours:{ar:'السبت إلى الخميس، من 4:00 م إلى 10:00 م',en:'Saturday to Thursday, 4:00 PM to 10:00 PM'}};
+  hours:{ar:'الأحد إلى الخميس، من 3:00 م إلى 9:00 م',en:'Sunday to Thursday, 3:00 PM to 9:00 PM'}};
 const P={name:{ar:'أحمد علي حسن',en:'Ahmed Ali Hassan'},first:{ar:'أحمد',en:'Ahmed'},phone:'0770 123 4567',file:'MK-0142',
   proc:{ar:'قلع ضرس العقل السفلي الأيسر (السن 38)',en:'Lower left wisdom tooth extraction (tooth 38)'},procDay:-1,
   next:{d:day(6),t:'17:30',what:{ar:'فك الغرز والمراجعة',en:'Suture removal and check-up'},dr:{ar:'د. مصطفى كمال',en:'Dr. Mustafa Kamal'}}};
@@ -265,8 +292,8 @@ ar:{demo:'نموذج تجريبي. كل البيانات وهمية.',welcome:'�
  planT:'خطة علاجك',xrays:'أشعتك',clinicInfo:'العيادة',address:'العنوان',hours:'الدوام',phoneL:'الهاتف',
  chatHello:n=>`أهلاً ${n}. أنا مساعد عيادة الدكتور مصطفى. أجاوبك من ملفك ومن تعليمات الدكتور. إذا السؤال يحتاج رأيه، أرسله له وأخبرك.`,
  sugg:['متى أقدر آكل طبيعي؟','عندي ألم، شنو آخذ؟','أقدر أدخن؟','أقدر آخذ حبتين بروفين مرة وحدة؟','عندي نزيف من مكان القلع'],
- placeholder:'اكتب سؤالك...',sendBtn:'إرسال',typing:'المساعد يكتب...',chatNote:'نموذج: الردود هنا محاكاة. النسخة الحقيقية تستخدم الذكاء الاصطناعي.',
- src:'المصدر: تعليمات د. مصطفى كمال لحالتك',pendingTag:'بانتظار الطبيب',emTag:'مهم',okTag:'جواب من ملفك',
+ placeholder:'اكتب سؤالك...',sendBtn:'إرسال',typing:'المساعد يكتب...',chatNote:'الرد يعتمد على ملفك. الأسئلة الحساسة تُرسل للدكتور.',
+ src:'المصدر: تعليمات د. مصطفى كمال لحالتك',pendingTag:'بانتظار الطبيب',emTag:'مهم',okTag:'جواب من ملفك',doctorTag:'رد الدكتور مصطفى',
  notifs:'الإشعارات',close:'إغلاق',app:'تطبيق',wa:'واتساب',bigText:'تكبير الخط',logout:'خروج',
  ans:{
   eat:'من اليوم الثاني تقدر ترجع تدريجياً للأكل العادي. امضغ على الجهة اليمنى، وابتعد عن الأكل الحار والقاسي (مكسرات، خبز يابس) لحد ما تفك الغرز.',
@@ -290,8 +317,8 @@ en:{demo:'Demo prototype. All data is made up.',welcome:'Welcome',loginText:'Ent
  planT:'Your treatment plan',xrays:'Your X-rays',clinicInfo:'The clinic',address:'Address',hours:'Hours',phoneL:'Phone',
  chatHello:n=>`Hello ${n}. I'm Dr. Mustafa's clinic assistant. I answer from your file and the doctor's instructions. If a question needs his opinion, I'll send it to him and let you know.`,
  sugg:['When can I eat normally?',"I'm in pain, what should I take?",'Can I smoke?','Can I take two ibuprofen at once?',"I'm bleeding from the extraction site"],
- placeholder:'Type your question...',sendBtn:'Send',typing:'The assistant is typing...',chatNote:'Demo: replies here are simulated. The real version uses AI.',
- src:"Source: Dr. Mustafa Kamal's instructions for your case",pendingTag:'Waiting for the doctor',emTag:'Important',okTag:'Answered from your file',
+ placeholder:'Type your question...',sendBtn:'Send',typing:'The assistant is typing...',chatNote:'Replies use your file. Sensitive questions go to the doctor.',
+ src:"Source: Dr. Mustafa Kamal's instructions for your case",pendingTag:'Waiting for the doctor',emTag:'Important',okTag:'Answered from your file',doctorTag:'Reply from Dr. Mustafa',
  notifs:'Notifications',close:'Close',app:'App',wa:'WhatsApp',bigText:'Larger text',logout:'Sign out',
  ans:{
   eat:'From day 2 you can slowly go back to normal food. Chew on the right side and avoid spicy and hard food (nuts, dry bread) until the sutures are out.',
@@ -307,6 +334,21 @@ en:{demo:'Demo prototype. All data is made up.',welcome:'Welcome',loginText:'Ent
   emergency:p=>`What you describe needs direct contact with the clinic.\n• Press a clean piece of gauze on the site for 30 minutes without lifting it.\n• Call the clinic now: ${p}\n• If bleeding is heavy or you have trouble breathing, go to the nearest emergency department.\nWe've alerted Dr. Mustafa.`}}
 };
 const t=k=>T[S.lang][k];
+
+/* ---------- booking text ---------- */
+const BT={
+ar:{bookBtn:'احجز موعد',bookTitle:'حجز موعد',bookSub:'احجز ساعة من دوام العيادة: من الأحد إلى الخميس، من 3:00 م إلى 9:00 م. كل ساعة تتسع لـ 3 مرضى.',
+ pickDay:'اختر اليوم',pickTime:'اختر الساعة',seats:n=>`متبقي ${n} من 3`,full:'مكتمل',passed:'فات الوقت',
+ patName:'اسم المريض',patPhone:'رقم هاتف المريض',confirm:'أكد الحجز',needSlot:'اختر اليوم والساعة أولاً',needName:'اكتب اسم المريض',needPhone:'اكتب رقم هاتف صحيح',
+ dup:'هذا الرقم عنده حجز بنفس الساعة',sentOk:'تم تأكيد الحجز',forWho:n=>`الحجز باسم ${n}`,sentNote:'وصل إشعار الحجز للدكتور مصطفى كمال.',
+ newBook:'احجز موعد ثاني',mine:'حجوزاتك القادمة',noMine:'ما عندك حجوزات قادمة.',cancelNote:'للإلغاء أو تغيير الموعد، اتصل بالعيادة.',back:'رجوع'},
+en:{bookBtn:'Book an appointment',bookTitle:'Book an appointment',bookSub:'Book an hour during clinic hours: Sunday to Thursday, 3:00 PM to 9:00 PM. Each hour fits 3 patients.',
+ pickDay:'Pick a day',pickTime:'Pick a time',seats:n=>`${n} of 3 left`,full:'Full',passed:'Passed',
+ patName:"Patient's name",patPhone:"Patient's phone",confirm:'Confirm booking',needSlot:'Pick a day and time first',needName:"Enter the patient's name",needPhone:'Enter a valid phone number',
+ dup:'This number already has a booking at this time',sentOk:'Booking confirmed',forWho:n=>`Booked for ${n}`,sentNote:'The clinic has been notified: Dr. Mustafa Kamal.',
+ newBook:'Book another',mine:'Your upcoming bookings',noMine:'You have no upcoming bookings.',cancelNote:'To cancel or change, call the clinic.',back:'Back'}
+};
+const bt=k=>BT[S.lang][k];
 
 /* ---------- icons ---------- */
 const I={
@@ -429,6 +471,11 @@ function vHome(){
     </div>
   </section>
   <section class="card">
+    <p><b>${bt('bookBtn')}</b></p>
+    <p class="small muted">${bt('bookSub')}</p>
+    <button class="btn" data-view="book">${bt('bookBtn')}</button>
+  </section>
+  <section class="card">
     <div class="section-title"><h2>${t('todayDoses')}</h2><button data-view="meds">${t('all')}</button></div>
     ${nxt?'':`<span class="pill ok">${t('allDone')}</span>`}
     <div>${ds.map(x=>doseRow(x,nxt&&nxt.id)).join('')}</div>
@@ -483,12 +530,60 @@ function vChat(){
   const msgs=[{who:'bot',kind:'hello',text:t('chatHello')(L(P.first))},...S.chat];
   return `<div class="chat" id="chat">${msgs.map(m=>{
     if(m.who==='me')return `<div class="msg me">${esc(m.text)}</div>`;
-    const tag=m.kind==='ok'?`<span class="pill ok">${t('okTag')}</span>`:m.kind==='pending'?`<span class="pill warn">${t('pendingTag')}</span>`:m.kind==='emergency'?`<span class="pill danger">${t('emTag')}</span>`:'';
+    const tag=m.kind==='ok'?`<span class="pill ok">${t('okTag')}</span>`:m.kind==='pending'?`<span class="pill warn">${t('pendingTag')}</span>`:m.kind==='emergency'?`<span class="pill danger">${t('emTag')}</span>`:m.kind==='doctor'?`<span class="pill info">${t('doctorTag')}</span>`:'';
     return `<div class="msg bot ${m.kind}">${tag}<span>${esc(m.text)}</span>${m.kind==='ok'?`<span class="src">${t('src')}</span>`:''}</div>`}).join('')}
     ${S.typing?`<div class="typing">${t('typing')}</div>`:''}</div>
     <p class="note">${t('chatNote')}</p>
     <div class="composer"><div style="max-width:460px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))"><div class="chips">${t('sugg').map(s=>`<button data-sugg="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
     <form id="f-chat"><input id="q" placeholder="${t('placeholder')}" autocomplete="off"><button class="btn" type="submit">${t('sendBtn')}</button></form></div>`;
+}
+function vBook(){
+  const nowD=new Date();
+  if(!S.bk.name)S.bk.name=L(P.name);
+  if(!S.bk.phone)S.bk.phone=P.phone;
+  const head=`<div class="row between"><h1 style="font-size:1.35em">${bt('bookTitle')}</h1><button class="btn ghost" data-view="home">${bt('back')}</button></div>`;
+  if(S.bk.ok){
+    const o=S.bk.ok,d=slotStart(o.date,o.time);
+    return head+`<section class="card" style="background:var(--ok-soft);border-color:transparent">
+      <div class="row" style="color:var(--ok)">${I.check}<b>${bt('sentOk')}</b></div>
+      <p><b>${fmtDate(d,{weekday:'long',day:'numeric',month:'long'})}</b> · ${fmtTime(o.time)}</p>
+      <p class="small">${bt('forWho')(esc(o.name))}</p>
+      <p class="small muted">${bt('sentNote')}</p></section>
+      <button class="btn block" data-act="bookAgain">${bt('newBook')}</button>`;
+  }
+  const days=bookingDays();
+  if(!S.bk.d&&days.length)S.bk.d=dkey(days[0]);
+  const chips=days.map(d=>{const dk=dkey(d);return `<button class="dchip" data-bday="${dk}" aria-pressed="${dk===S.bk.d}"><small>${fmtDate(d,{weekday:'short'})}</small><b class="num">${d.getDate()}</b><small>${fmtDate(d,{month:'short'})}</small></button>`}).join('');
+  const slots=slotTimes().map(tm=>{
+    const passed=slotStart(S.bk.d,tm)<=nowD,left=seatsLeft(S.bk.d,tm),off=passed||left<=0;
+    const label=passed?bt('passed'):left<=0?bt('full'):bt('seats')(left);
+    return `<button class="slotbtn" data-btime="${tm}" ${off?'disabled':''} aria-pressed="${S.bk.t===tm}"><b class="num">${fmtTime(tm)}</b><small>${label}</small></button>`}).join('');
+  const mine=bookings.filter(b=>b.by===digits(P.phone)&&slotStart(b.date,b.time)>nowD).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  return head+`<p class="muted small">${bt('bookSub')}</p>
+    <section style="display:flex;flex-direction:column;gap:10px"><div class="eyebrow">${bt('pickDay')}</div><div class="dchips">${chips}</div></section>
+    <section style="display:flex;flex-direction:column;gap:10px"><div class="eyebrow">${bt('pickTime')}</div><div class="slots">${slots}</div></section>
+    <form id="f-book" class="card">
+      <div class="field"><label for="bk-name">${bt('patName')}</label><input id="bk-name" value="${esc(S.bk.name)}" autocomplete="name"></div>
+      <div class="field"><label for="bk-phone">${bt('patPhone')}</label><input id="bk-phone" inputmode="tel" value="${esc(S.bk.phone)}" autocomplete="tel"></div>
+      ${S.bk.err?`<p class="err">${S.bk.err}</p>`:''}
+      <button class="btn block" type="submit">${bt('confirm')}</button>
+    </form>
+    <section class="card"><div class="eyebrow">${bt('mine')}</div>
+      ${mine.length?mine.map(b=>`<div class="row between"><b>${fmtDate(slotStart(b.date,b.time),{weekday:'long',day:'numeric',month:'long'})}</b><span class="num">${fmtTime(b.time)}</span></div><div class="small muted">${esc(b.name)}</div>`).join(''):`<p class="muted small">${bt('noMine')}</p>`}
+      <p class="small muted">${bt('cancelNote')}</p></section>`;
+}
+function bookSubmit(){
+  const name=S.bk.name.trim(),ph=digits(S.bk.phone),d=S.bk.d,tm=S.bk.t;let err='';
+  if(!d||!tm)err=bt('needSlot');
+  else if(!name)err=bt('needName');
+  else if(ph.length<10)err=bt('needPhone');
+  else if(slotStart(d,tm)<=new Date())err=bt('passed');
+  else if(seatsLeft(d,tm)<=0)err=bt('full');
+  else if(bookings.some(b=>b.date===d&&b.time===tm&&digits(b.phone)===ph))err=bt('dup');
+  if(err){S.bk.err=err;render();return}
+  bookings.push({id:`b${Date.now()}${Math.floor(Math.random()*1000)}`,date:d,time:tm,name,phone:S.bk.phone.trim(),by:digits(P.phone),at:new Date().toISOString(),seen:false});
+  saveBookings();
+  S.bk.ok={date:d,time:tm,name};S.bk.err='';render();
 }
 function vNotif(){
   if(!S.notif)return '';
@@ -523,10 +618,33 @@ function reply(q){
   else text=A[c];
   return {who:'bot',kind,text};
 }
-function ask(q){
-  q=q.trim();if(!q||S.typing)return;S.chat.push({who:'me',text:q});S.typing=true;render();
-  setTimeout(()=>{S.typing=false;S.chat.push(reply(q));render()},700);
+/* The clinic server (server/server.mjs) serves this page, so the API is on the same address.
+   The conversation lives on the server: it is reloaded on every sync, and doctor replies arrive through it. */
+const OFFLINE={ar:'المساعد غير متصل الآن. أرسل سؤالك للعيادة على الرقم: '+CLINIC.phone,en:'The assistant is offline. Please contact the clinic: '+CLINIC.phone};
+async function syncChat(){
+  if(!S.logged)return;
+  try{
+    const r=await fetch(`/api/patients/${encodeURIComponent(P.file)}/messages?after=0`,{cache:'no-store'});
+    if(!r.ok)throw new Error('http '+r.status);
+    const j=await r.json();
+    const changed=j.messages.length!==S.srvCount;
+    S.srvCount=j.messages.length;
+    S.chat=j.messages.map(m=>({who:m.role==='patient'?'me':'bot',kind:m.kind,text:m.text}));
+    if(changed)render();
+  }catch(e){}
 }
+async function ask(q){
+  q=q.trim();if(!q||S.typing)return;S.chat.push({who:'me',text:q});S.typing=true;render();
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId:P.file,message:q})});
+    if(!r.ok)throw new Error('http '+r.status);
+    await r.json();
+  }catch(e){S.chat.push({who:'bot',kind:'plain',text:L(OFFLINE)})}
+  S.typing=false;
+  await syncChat();
+  render();
+}
+setInterval(syncChat,4000);
 
 /* ---------- render ---------- */
 const root=document.getElementById('root');
@@ -534,35 +652,48 @@ function render(){
   document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==='ar'?'rtl':'ltr';
   document.body.classList.toggle('big',S.big);
   if(!S.logged){root.innerHTML=vLogin();return}
-  const v={home:vHome,meds:vMeds,care:vCare,plan:vPlan,chat:vChat}[S.view]||vHome;
+  const v={home:vHome,meds:vMeds,care:vCare,plan:vPlan,chat:vChat,book:vBook}[S.view]||vHome;
+  const qEl=document.getElementById('q');if(qEl)S.draft=qEl.value;   // keep what the patient is typing
   root.innerHTML=header()+`<main class="${S.view==='chat'?'chatting':''}">${v()}</main>`+nav()+vNotif();
+  const qNew=document.getElementById('q');if(qNew)qNew.value=S.draft;
   root.querySelectorAll('canvas[data-x]').forEach(cv=>{const x=XRAYS[+cv.dataset.x];drawXray(cv,{...x,extracted:x.type==='pano'?false:true})});
   if(S.view==='chat'){window.scrollTo(0,document.body.scrollHeight)}
 }
 function toast(msg){const d=document.createElement('div');d.className='toast';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)}
 
 root.addEventListener('click',e=>{
-  const el=e.target.closest('[data-act],[data-view],[data-dose],[data-prn],[data-sugg]');if(!el)return;
+  const el=e.target.closest('[data-act],[data-view],[data-dose],[data-prn],[data-sugg],[data-bday],[data-btime]');if(!el)return;
   if(el.classList.contains('sheet-bg')&&e.target!==el)return;
   if(el.dataset.view){S.view=el.dataset.view;S.notif=false;render();window.scrollTo(0,0);if(S.view==='chat')window.scrollTo(0,document.body.scrollHeight);return}
   if(el.dataset.dose){const id=el.dataset.dose;S.taken[id]=!S.taken[id];save();render();return}
   if(el.dataset.prn){const k=`${key(today)}|${el.dataset.prn}|prn`;S.taken[k]=(S.taken[k]||0)+1;save();render();return}
   if(el.dataset.sugg){ask(el.dataset.sugg);return}
+  if(el.dataset.bday){S.bk.d=el.dataset.bday;S.bk.t='';S.bk.err='';render();return}
+  if(el.dataset.btime){S.bk.t=el.dataset.btime;S.bk.err='';render();return}
   const a=el.dataset.act;
   if(a==='lang'){S.lang=S.lang==='ar'?'en':'ar';save();render()}
   else if(a==='big'){S.big=!S.big;save();render()}
   else if(a==='notif'){S.notif=!S.notif;render()}
   else if(a==='back'){S.step='phone';S.err='';render()}
   else if(a==='logout'){S.logged=false;S.step='phone';save();render()}
+  else if(a==='bookAgain'){S.bk.ok=null;S.bk.t='';S.bk.err='';render()}
   else if(a==='copy'){const p=CLINIC.phone;try{navigator.clipboard.writeText(p).then(()=>toast(t('copied')),()=>toast(p))}catch(err){toast(p)}}
 });
 root.addEventListener('submit',e=>{
   e.preventDefault();
   if(e.target.id==='f-phone'){S.step='code';S.err='';render();setTimeout(()=>{const c=document.getElementById('cd');c&&c.focus()},50)}
-  else if(e.target.id==='f-code'){const v=document.getElementById('cd').value.trim();if(v==='1234'){S.logged=true;S.step='phone';S.view='home';save();render()}else{S.err=t('badCode');render()}}
+  else if(e.target.id==='f-code'){const v=document.getElementById('cd').value.trim();if(v==='1234'){S.logged=true;S.step='phone';S.view='home';save();render();syncChat()}else{S.err=t('badCode');render()}}
   else if(e.target.id==='f-chat'){const q=document.getElementById('q');ask(q.value);}
+  else if(e.target.id==='f-book'){bookSubmit()}
 });
+root.addEventListener('input',e=>{
+  if(e.target.id==='bk-name')S.bk.name=e.target.value;
+  else if(e.target.id==='bk-phone')S.bk.phone=e.target.value;
+});
+/* another tab (the clinic dashboard or another booking) changed the schedule: refresh free seats */
+window.addEventListener('storage',e=>{if(e.key!==BOOK.key)return;loadBookings();if(S.view==='book'&&!S.bk.ok&&S.logged)render()});
 render();
+syncChat();
 })();
 </script>
 

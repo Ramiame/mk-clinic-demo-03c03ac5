@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>لوحة الطبيب - عيادة د. مصطفى كمال</title>
+<style>
+:root{--bg:#EEF3F3;--card:#fff;--ink:#12262D;--muted:#586C73;--line:#D6E1E2;--accent:#0C6F7B;--soft:#D9EDEF;--danger:#B0341A;--dsoft:#FAE2DB;--warn:#9A5F0C;--wsoft:#FAEDD6;--ok:#2B7A4B;--osoft:#DFF1E5}
+@media (prefers-color-scheme:dark){:root{--bg:#0C1619;--card:#132227;--ink:#E3EEF0;--muted:#93A8AE;--line:#24373D;--accent:#4FB7C3;--soft:#16363C;--danger:#F08A70;--dsoft:#3C1C14;--warn:#E3AA55;--wsoft:#3A2B12;--ok:#6CC892;--osoft:#163327}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:1.05em;margin:0;flex:1}
+.badge{background:var(--danger);color:#fff;border-radius:99px;padding:1px 9px;font-size:.8em;font-weight:700;display:none}
+.badge.on{display:inline-block}
+nav{display:flex;gap:6px}
+nav button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:7px 14px;cursor:pointer}
+nav button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{max-width:920px;margin:0 auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card.open{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger) inset}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.muted{color:var(--muted);font-size:.9em}
+.pill{display:inline-block;border-radius:99px;padding:1px 10px;font-size:.8em;font-weight:700}
+.p-danger{background:var(--dsoft);color:var(--danger)} .p-warn{background:var(--wsoft);color:var(--warn)} .p-ok{background:var(--osoft);color:var(--ok)} .p-info{background:var(--soft);color:var(--accent)}
+button.btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:9px 16px;font-weight:600;cursor:pointer}
+button.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select,textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+textarea{min-height:70px;resize:vertical}
+label{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:.92em}
+label small{font-weight:400;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+.q{background:var(--bg);border-radius:10px;padding:10px 12px;white-space:pre-wrap}
+.gate{max-width:380px;margin:12vh auto;text-align:center}
+.err{color:var(--danger);font-size:.9em}
+.hint{color:var(--muted);font-size:.85em}
+.list .item{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card);cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.list .item:hover{border-color:var(--accent)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>لوحة الطبيب · عيادة د. مصطفى كمال</h1>
+  <span id="badge" class="badge"></span>
+  <nav id="tabs" class="hidden">
+    <button data-tab="alerts" aria-pressed="true">التنبيهات</button>
+    <button data-tab="patients" aria-pressed="false">المرضى</button>
+    <button id="logout" class="ghost" style="background:none">خروج</button>
+  </nav>
+</header>
+
+<div id="gate" class="gate card hidden">
+  <h2 style="margin:0;font-size:1.1em">أدخل رمز الطبيب</h2>
+  <p class="muted" style="margin:0">الرمز يظهر في طرفية الخادم عند التشغيل، ويُحفظ على هذا المتصفح.</p>
+  <input id="tokenIn" type="password" placeholder="الرمز" autocomplete="off">
+  <p id="gateErr" class="err hidden"></p>
+  <button id="tokenBtn" class="btn">دخول</button>
+</div>
+
+<main id="app" class="hidden">
+  <section id="v-alerts" class="list" style="display:flex;flex-direction:column;gap:12px"></section>
+  <section id="v-patients" class="hidden" style="display:flex;flex-direction:column;gap:12px">
+    <div class="row between">
+      <input id="search" placeholder="ابحث بالاسم أو الرقم" style="max-width:320px">
+      <button id="newPatient" class="btn">+ مريض جديد</button>
+    </div>
+    <div id="plist" class="list" style="display:flex;flex-direction:column;gap:8px"></div>
+    <form id="pform" class="card hidden" autocomplete="off"></form>
+  </section>
+</main>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY='mk-doctor-token';
+let TOKEN=localStorage.getItem(KEY)||'';
+let PATIENTS=[];let EDIT=null;let alertsTimer=null;let tab='alerts';
+const TYPE={emergency:['طوارئ','p-danger'],penicillin:['حساسية بنسلين','p-danger'],medication:['تغيير دواء','p-warn'],review:['يحتاج رأيك','p-warn'],image:['صورة للمراجعة','p-info'],'model-error':['خطأ في النموذج','p-danger']};
+const fmt=iso=>new Date(iso).toLocaleString('ar-IQ-u-nu-latn',{dateStyle:'medium',timeStyle:'short'});
+
+async function api(path,opt={}){
+  const r=await fetch(path,{...opt,headers:{'Content-Type':'application/json','X-Doctor-Token':TOKEN,...(opt.headers||{})}});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401){logout(true);throw new Error('401')}
+  if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+  return j;
+}
+
+function showGate(msg){$('#gate').classList.remove('hidden');$('#app').classList.add('hidden');$('#tabs').classList.add('hidden');const e=$('#gateErr');e.textContent=msg||'';e.classList.toggle('hidden',!msg)}
+function showApp(){$('#gate').classList.add('hidden');$('#app').classList.remove('hidden');$('#tabs').classList.remove('hidden');setTab(tab)}
+function logout(silent){TOKEN='';localStorage.removeItem(KEY);clearInterval(alertsTimer);showGate(silent?'انتهت الجلسة أو الرمز غير صحيح':'')}
+
+$('#tokenBtn').onclick=async()=>{
+  TOKEN=$('#tokenIn').value.trim();if(!TOKEN)return;
+  try{await api('/api/doctor/alerts');localStorage.setItem(KEY,TOKEN);start()}catch(e){TOKEN='';showGate('الرمز غير صحيح')}
+};
+$('#tokenIn').onkeydown=e=>{if(e.key==='Enter')$('#tokenBtn').click()};
+$('#logout').onclick=()=>logout(false);
+
+function setTab(t){
+  tab=t;
+  document.querySelectorAll('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===t)));
+  $('#v-alerts').classList.toggle('hidden',t!=='alerts');
+  $('#v-patients').classList.toggle('hidden',t!=='patients');
+  if(t==='patients')loadPatients();
+}
+document.querySelectorAll('#tabs [data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+
+/* ---------- alerts ---------- */
+async function loadAlerts(){
+  const d=await api('/api/doctor/alerts');
+  const b=$('#badge');b.textContent=d.open;b.classList.toggle('on',d.open>0);
+  const open=d.alerts.filter(a=>a.status==='open'),done=d.alerts.filter(a=>a.status!=='open');
+  // keep typed replies while the list refreshes
+  const drafts={};document.querySelectorAll('textarea[data-draft]').forEach(t=>drafts[t.dataset.draft]=t.value);
+  $('#v-alerts').innerHTML=
+    (open.length?'':'<p class="muted">لا توجد تنبيهات مفتوحة.</p>')+
+    open.map(a=>{const [lbl,cls]=TYPE[a.type]||['تنبيه',''];return `
+    <div class="card open">
+      <div class="row between"><b>${esc(a.patient_name)} <span class="muted">(${esc(a.patient_id)})</span></b><span class="pill ${cls}">${lbl}</span></div>
+      <div class="q">${esc(a.question)}</div>
+      <div class="muted">${fmt(a.created_at)}</div>
+      <textarea data-draft="${a.id}" placeholder="اكتب الرد، وسيصل للمريض في التطبيق">${esc(drafts[a.id]||'')}</textarea>
+      <div class="row"><button class="btn" data-reply="${a.id}">أرسل الرد للمريض</button><span class="err hidden" id="re-${a.id}"></span></div>
+    </div>`}).join('')+
+    (done.length?`<h3 style="margin:8px 0 0;font-size:1em">الردود السابقة</h3>`+done.map(a=>`
+    <div class="card"><div class="row between"><b>${esc(a.patient_name)}</b><span class="muted">${a.answered_at?fmt(a.answered_at):''}</span></div>
+      <div class="q">${esc(a.question)}</div><div class="q" style="background:var(--osoft)">رد: ${esc(a.reply)}</div></div>`).join(''):'');
+}
+$('#v-alerts').onclick=async e=>{
+  const id=e.target.dataset.reply;if(!id)return;
+  const text=document.querySelector(`textarea[data-draft="${id}"]`).value.trim();
+  if(!text){$('#re-'+id).textContent='اكتب الرد أولاً';$('#re-'+id).classList.remove('hidden');return}
+  e.target.disabled=true;
+  try{await api(`/api/doctor/alerts/${id}/reply`,{method:'POST',body:JSON.stringify({text})});await loadAlerts()}
+  catch(err){$('#re-'+id).textContent='تعذر الإرسال: '+err.message;$('#re-'+id).classList.remove('hidden');e.target.disabled=false}
+};
+
+/* ---------- patients ---------- */
+async function loadPatients(){
+  PATIENTS=(await api('/api/doctor/patients')).patients;
+  renderList();
+}
+function renderList(){
+  const q=$('#search').value.trim();
+  const list=PATIENTS.filter(p=>!q||p.name.includes(q)||p.id.includes(q));
+  $('#plist').innerHTML=list.map(p=>`
+    <div class="item" data-pid="${esc(p.id)}">
+      <div><b>${esc(p.name)}</b> <span class="muted">${esc(p.id)} · ${p.age??'-'} سنة</span>
+      <div class="muted">${p.allergies&&p.allergies.length?'حساسية: '+esc(p.allergies.join('،')):(p.allergies===null?'الحساسية: غير مسجلة':'بدون حساسية')}</div></div>
+      ${p.intake.asked&&!p.intake.done?'<span class="pill p-warn">بانتظار المريض</span>':''}
+    </div>`).join('')||'<p class="muted">لا يوجد مرضى.</p>';
+}
+$('#search').oninput=renderList;
+$('#plist').onclick=e=>{const it=e.target.closest('[data-pid]');if(it)openForm(it.dataset.pid)};
+$('#newPatient').onclick=()=>openForm(null);
+
+const listText=v=>v==null?'':(Array.isArray(v)?(v.length?v.join('، '):'لا يوجد'):v);
+function openForm(id){
+  EDIT=id?PATIENTS.find(p=>p.id===id):null;
+  const p=EDIT||{id:'',name:'',sex:'m',age:'',phone:'',allergies:null,chronic:null,pregnant:null,medications:[],treatment:'',doctorNotes:'',details:'',intake:{}};
+  const pregVal=p.pregnant===true?'yes':p.pregnant===false?'no':'';
+  const f=$('#pform');f.classList.remove('hidden');
+  f.innerHTML=`
+    <div class="row between"><h2 style="margin:0;font-size:1.05em">${EDIT?'تعديل: '+esc(p.name):'مريض جديد'}</h2>
+      <button type="button" class="btn ghost" id="closeForm">إغلاق</button></div>
+    ${EDIT&&p.intake.raw?`<div class="q" style="background:var(--wsoft)">ما قاله المريض عند السؤال عن حساسيته وأمراضه: ${esc(p.intake.raw)}</div>`:''}
+    <div class="grid">
+      <label>رقم الملف<input name="id" value="${esc(p.id)}" ${EDIT?'readonly':''} required placeholder="MK-0150"></label>
+      <label>الاسم<input name="name" value="${esc(p.name)}" required></label>
+      <label>الجنس<select name="sex"><option value="m" ${p.sex!=='f'?'selected':''}>ذكر</option><option value="f" ${p.sex==='f'?'selected':''}>أنثى</option></select></label>
+      <label>العمر<input name="age" type="number" min="0" max="130" value="${esc(p.age??'')}"></label>
+      <label>الهاتف<input name="phone" value="${esc(p.phone||'')}" inputmode="tel"></label>
+      <label>الحمل <small>للإناث فقط</small><select name="pregnant" ${p.sex==='f'?'':'disabled'}><option value="" ${pregVal===''?'selected':''}>غير مسجل</option><option value="no" ${pregVal==='no'?'selected':''}>غير حامل</option><option value="yes" ${pregVal==='yes'?'selected':''}>حامل</option></select></label>
+      <label class="full">الحساسية <small>افصل بفاصلة. اكتب "لا يوجد" إذا متأكد، واتركه فارغاً إذا غير معروف</small><input name="allergies" value="${esc(p.allergies==null?'':(p.allergies.length?p.allergies.join('، '):'لا يوجد'))}"></label>
+      <label class="full">الأمراض المزمنة <small>سكر، ضغط، قلب... واكتب "لا يوجد" أو اتركه فارغاً إذا غير معروف</small><input name="chronic" value="${esc(p.chronic==null?'':(p.chronic.length?p.chronic.join('، '):'لا يوجد'))}"></label>
+      <label class="full">الأدوية الحالية <small>سطر لكل دواء</small><textarea name="medications">${esc((p.medications||[]).join('\n'))}</textarea></label>
+      <label class="full">العلاج الحالي<input name="treatment" value="${esc(p.treatment||'')}"></label>
+      <label class="full">تعليمات الطبيب للمريض<textarea name="doctorNotes">${esc(p.doctorNotes||'')}</textarea></label>
+      <label class="full">تفاصيل أخرى<textarea name="details">${esc(p.details||'')}</textarea></label>
+    </div>
+    <div class="row"><button class="btn" type="submit">حفظ</button><span id="fErr" class="err hidden"></span></div>`;
+  f.querySelector('[name=sex]').onchange=e=>{const s=f.querySelector('[name=pregnant]');s.disabled=e.target.value!=='f';if(s.disabled)s.value=''};
+  f.querySelector('#closeForm').onclick=()=>f.classList.add('hidden');
+  f.scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('#pform').onsubmit=async e=>{
+  e.preventDefault();const f=e.target;const v=n=>f.elements[n].value;
+  const body={id:v('id').trim(),name:v('name').trim(),sex:v('sex'),age:v('age'),phone:v('phone'),allergies:v('allergies'),chronic:v('chronic'),
+    pregnant:v('pregnant')==='yes'?true:v('pregnant')==='no'?false:null,medications:v('medications'),treatment:v('treatment'),doctorNotes:v('doctorNotes'),details:v('details')};
+  if(body.sex!=='f')body.pregnant=null;
+  try{
+    await api(`/api/doctor/patients/${encodeURIComponent(body.id)}`,{method:'PUT',body:JSON.stringify(body)});
+    $('#pform').classList.add('hidden');await loadPatients();
+  }catch(err){const x=$('#fErr');x.textContent='تعذر الحفظ: '+err.message;x.classList.remove('hidden')}
+};
+
+function start(){showApp();loadAlerts().catch(()=>{});clearInterval(alertsTimer);alertsTimer=setInterval(()=>{loadAlerts().catch(()=>{});if(tab==='patients')loadPatients().catch(()=>{})},5000)}
+
+if(TOKEN){api('/api/doctor/alerts').then(start).catch(()=>logout(true))}else showGate('');
+})();
+</script>
+</body>
+</html>
